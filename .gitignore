@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.json
+!requirements.txt
+
+# Environment variables
+.env
+
+# Logs
+*.log
