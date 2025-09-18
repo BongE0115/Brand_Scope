@@ -1,9 +1,187 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>{{ title }}</title>
-    </head>
-    <body>
-        <h1>Welcome to Brand Scope</h1>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="globals.css" />
+    <link rel="stylesheet" href="style.css" />
+  <body>
+    <div class="box"><div class="rectangle">
+      <div class="overlap">
+        <img class="university-element" src="../img/universitylogo.png" />
+      </div>
+      <form id="searchForm" action="/search" method="GET" class="search-form">
+        <input type="text" name="search" placeholder="검색어를 입력하세요" class="search-input"/>
+          <button type="submit" class="search-btn">
+            <img src="../img/magnifier.png" alt="돋보기 아이콘" class="search-icon"/>
+          </button>
+      </form>   
+    </div></div>
+    <div class="dashboard-container">
+      <div class="card card-small"><div class="circle place">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M42 20C42 34 24 46 24 46C24 46 6 34 6 20C6 15.2261 7.89642 10.6477 11.2721 7.27208C14.6477 3.89642 19.2261 2 24 2C28.7739 2 33.3523 3.89642 36.7279 7.27208C40.1036 10.6477 42 15.2261 42 20Z" stroke="#BEA800" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M24 26C27.3137 26 30 23.3137 30 20C30 16.6863 27.3137 14 24 14C20.6863 14 18 16.6863 18 20C18 23.3137 20.6863 26 24 26Z" stroke="#BEA800" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div><div class="littletitle"><h4>최다 언급채널</h4>
+        <b id="chanel">어쩌구</b></div>
+      </div>
+      <div class="card card-small"><div class="circle calendar">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 4V12M16 4V12M6 20H42M10 8H38C40.2091 8 42 9.79086 42 12V40C42 42.2091 40.2091 44 38 44H10C7.79086 44 6 42.2091 6 40V12C6 9.79086 7.79086 8 10 8Z" stroke="#251EF3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div><div class="littletitle"> <h4>최다 언급량 일자</h4>
+        <b id="mostdate">언제</b></div>
+      </div>
+      <div class="card card-small"><div class="circle updown">
+        <svg id="arrow-down" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M46 36L27 17L17 27L2 12M46 36H34M46 36V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg id="arrow-up" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M46 12L27 31L17 21L2 36M46 12H34M46 12V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg> 
+      </div><div class="littletitle"><h4>이전기간대비 언급량 증감률</h4>
+        <b id="change">저쩌구</b></div>
+      </div>
+
+      <div class="card card-wide"></div>
+        <div class="side-cards-container">
+        <div class="card card-side-first"><div class="circle what">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M44 24C44 35.0457 35.0457 44 24 44M44 24C44 12.9543 35.0457 4 24 4M44 24H36M24 44C12.9543 44 4 35.0457 4 24M24 44V36M4 24C4 12.9543 12.9543 4 24 4M4 24H12M24 4V12" stroke="#D01993" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          </div><div class="littletitle"> <h4>이슈확산 포인트</h4>
+          <b id="truepoint">여기</b></div>
+          </div>
+          <div class="card card-side-second">
+            <h2>총 <p id="total">000</p>건의 결과</h2>
+            <div class="sns1"><img src="../img/instagram.png" alt="인스타그램 아이콘" class="sns-icon"/>인스타그램</div>
+            <div class="sns2"><img src="../img/twitter.png" alt="트위터 아이콘" class="sns-icon"/>트위터</div>
+            <div class="sns3"><img src="../img/naver.png" alt="네이버 아이콘" class="sns-icon"/>네이버 블로그</div>
+            <div class="more"> 더 보기 </div>
+          </div>
+        </div>
+      <div class="card card-graph">
+        <div class="third header">
+          <span class="icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.33329 14.6667L14.6666 2.66666C15.7275 2.66666 16.7449 3.08808 17.4951 3.83823C18.2452 4.58838 18.6666 5.60579 18.6666 6.66666V12H26.2133C26.5998 11.9956 26.9827 12.0753 27.3354 12.2336C27.6881 12.3919 28.0021 12.625 28.2558 12.9167C28.5094 13.2084 28.6966 13.5518 28.8044 13.923C28.9122 14.2942 28.938 14.6845 28.88 15.0667L27.04 27.0667C26.9435 27.7025 26.6205 28.2821 26.1305 28.6987C25.6405 29.1152 25.0164 29.3406 24.3733 29.3333H9.33329M9.33329 14.6667V29.3333M9.33329 14.6667H5.33329C4.62605 14.6667 3.94777 14.9476 3.44767 15.4477C2.94758 15.9478 2.66663 16.6261 2.66663 17.3333V26.6667C2.66663 27.3739 2.94758 28.0522 3.44767 28.5523C3.94777 29.0524 4.62605 29.3333 5.33329 29.3333H9.33329" stroke="#23AF00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.6667 17.3333L17.3334 29.3333C16.2725 29.3333 15.2551 28.9119 14.5049 28.1618C13.7548 27.4116 13.3334 26.3942 13.3334 25.3333V20H5.78671C5.40016 20.0044 5.01729 19.9247 4.66461 19.7664C4.31193 19.6081 3.99789 19.375 3.74423 19.0833C3.49057 18.7916 3.30337 18.4483 3.19559 18.077C3.08781 17.7058 3.06203 17.3155 3.12004 16.9333L4.96004 4.93335C5.05647 4.29747 5.37946 3.71787 5.8695 3.30134C6.35954 2.88481 6.9836 2.65941 7.62671 2.66668H22.6667M22.6667 17.3333V2.66668M22.6667 17.3333H26.2267C26.9813 17.3467 27.7146 17.0825 28.2873 16.5909C28.8599 16.0993 29.2322 15.4146 29.3334 14.6667V5.33335C29.2322 4.58543 28.8599 3.90068 28.2873 3.40911C27.7146 2.91753 26.9813 2.65334 26.2267 2.66668H22.6667" stroke="#E40303" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>      
+          </span>
+          <h2>감성 분석</h2>
+        </div>
+        <div class="three three-content">
+          <div class="sentiment-section">
+            <div class="sentiment-analysis">
+              <div class="analysis-box">
+                <div class="thumbs-updown">      
+                  <svg class="positive-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.33329 14.6667L14.6666 2.66666C15.7275 2.66666 16.7449 3.08808 17.4951 3.83823C18.2452 4.58838 18.6666 5.60579 18.6666 6.66666V12H26.2133C26.5998 11.9956 26.9827 12.0753 27.3354 12.2336C27.6881 12.3919 28.0021 12.625 28.2558 12.9167C28.5094 13.2084 28.6966 13.5518 28.8044 13.923C28.9122 14.2942 28.938 14.6845 28.88 15.0667L27.04 27.0667C26.9435 27.7025 26.6205 28.2821 26.1305 28.6987C25.6405 29.1152 25.0164 29.3406 24.3733 29.3333H9.33329M9.33329 14.6667V29.3333M9.33329 14.6667H5.33329C4.62605 14.6667 3.94777 14.9476 3.44767 15.4477C2.94758 15.9478 2.66663 16.6261 2.66663 17.3333V26.6667C2.66663 27.3739 2.94758 28.0522 3.44767 28.5523C3.94777 29.0524 4.62605 29.3333 5.33329 29.3333H9.33329" stroke="#23AF00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg class="negative-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.6667 17.3333L17.3334 29.3333C16.2725 29.3333 15.2551 28.9119 14.5049 28.1618C13.7548 27.4116 13.3334 26.3942 13.3334 25.3333V20H5.78671C5.40016 20.0044 5.01729 19.9247 4.66461 19.7664C4.31193 19.6081 3.99789 19.375 3.74423 19.0833C3.49057 18.7916 3.30337 18.4483 3.19559 18.077C3.08781 17.7058 3.06203 17.3155 3.12004 16.9333L4.96004 4.93335C5.05647 4.29747 5.37946 3.71787 5.8695 3.30134C6.35954 2.88481 6.9836 2.65941 7.62671 2.66668H22.6667M22.6667 17.3333V2.66668M22.6667 17.3333H26.2267C26.9813 17.3467 27.7146 17.0825 28.2873 16.5909C28.8599 16.0993 29.2322 15.4146 29.3334 14.6667V5.33335C29.2322 4.58543 28.8599 3.90068 28.2873 3.40911C27.7146 2.91753 26.9813 2.65334 26.2267 2.66668H22.6667" stroke="#E40303" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="sentiment-bar-container">
+                  <div class="sentiment-bar" style="width: 62%;"></div>
+                </div>
+                <div>
+                  <input type="range" class="custom-slider" min="0" max="100" value="0" step="1" disabled/>
+                </div>
+                <p class="label"></p>
+              </div>
+            </div>
+          </div>
+          <div class="visualization-area">
+            <h2>시각화 자료</h2>
+          </div>
+
+          <div class="keyword-ranking">
+            <h2>긍정 / 부정 언급 단어 순위</h2>
+          </div>
+        </div>
+      </div>
+      <div class="card card-graph2"></div>
+    </div>
+
+
+
+
+
+    <script>
+      // 스크립트존
+
+      // 변경하고 싶은 값을 변수로 정의
+      // 이 값은 서버에서 가져오거나 다른 로직을 통해 생성될 수 있습니다.
+      const newChanelValue = "YOUTUBE"; //최다 언급채절 (변수)
+      const newMostdateValue = "2025.09.22"; //최다 언급량 일자 (변수)
+      const newChangeValue = "12"; //증감률 (변수)
+      const newTruepointValue = "INSTARGRAM"; //이슈 확산 포인트 (변수)
+      
+      
+      // ID를 사용하여 HTML 요소를 가져옵니다.
+      const chanelElement = document.getElementById('chanel');
+      const mostdateElement = document.getElementById('mostdate');
+      const changeElement = document.getElementById('change');
+      const truepointElement = document.getElementById('truepoint');
+
+      // 요소의 텍스트 내용을 새로운 값으로 변경합니다.
+      chanelElement.textContent = newChanelValue;
+      mostdateElement.textContent = newMostdateValue;
+      changeElement.textContent = newChangeValue;
+      truepointElement.textContent = newTruepointValue;
+
+
+
+
+      const positivePercentage = 49;  //예시값 (변경될 값)
+
+      const customSlider = document.querySelector('.custom-slider');
+      const positiveIcon = document.querySelector('.positive-icon');
+      const negativeIcon = document.querySelector('.negative-icon');
+      const label = document.querySelector('.label');
+      
+
+      // 슬라이더의 값을 positivePercentage 값으로 설정
+      customSlider.value = positivePercentage;
+
+
+      // 긍정 점수가 50%를 넘으면 긍정 아이콘을, 아니면 부정 아이콘을 보여줍니다.
+      if (positivePercentage >= 50) {
+        positiveIcon.style.display = 'block';
+        negativeIcon.style.display = 'none';
+        label.textContent = "긍정"; // '긍정'으로 텍스트 변경
+      } else {
+        positiveIcon.style.display = 'none';
+        negativeIcon.style.display = 'block';
+        label.textContent = "부정"; // '부정'으로 텍스트 변경
+      }
+
+
+
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const changeValueElement = document.getElementById('change');
+        const arrowUp = document.getElementById('arrow-up');
+        const arrowDown = document.getElementById('arrow-down');
+
+        // #change 요소의 텍스트를 숫자로 변환합니다.
+        const changeValue = parseFloat(changeValueElement.textContent);
+
+        // 값에 따라 SVG를 표시하거나 숨깁니다.
+        if (changeValue > 0) {
+          arrowUp.style.display = 'block';
+          arrowDown.style.display = 'none';
+        } else if (changeValue < 0) {
+          arrowUp.style.display = 'none';
+          arrowDown.style.display = 'block';
+        } else {
+          // 값이 0이거나 유효하지 않으면 모두 숨깁니다.
+          arrowUp.style.display = 'none';
+          arrowDown.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
 </html>

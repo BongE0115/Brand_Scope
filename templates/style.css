@@ -1,0 +1,407 @@
+body {
+  background-color: #f0f0f0; /* 밝은 회색으로 설정 */
+}
+
+
+/* 상단 바와 그 내용을 감싸는 부모 컨테이너 */
+.rectangle {
+  display: flex; /* 자식 요소들을 가로로 정렬 */
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 20px; /* 로고와 검색 폼 사이 간격 */
+  
+  /* 고정된 위치를 유지하지만, 내부 요소 정렬을 위해 flexbox 사용 */
+  position: fixed;
+  width: 100%; /* 너비를 100%로 설정하여 화면에 꽉 차게 */
+  height: 80px;
+  top: 0;
+  left: 0;
+  background-color: #7bb5e5;
+  padding: 0 24px; /* 좌우 패딩을 추가하여 내용이 가장자리에 붙지 않도록 */
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+  z-index: 1000; /* 다른 요소 위에 표시되도록 z-index 부여 */
+}
+
+/* 로고 이미지 스타일 */
+.university-element {
+  width: 50px;
+  height: 50px;
+  /* position: fixed; 속성을 제거합니다. 이제 부모 요소인 .rectangle 안에서 flexbox에 의해 정렬됩니다. */
+}
+
+/* 검색 폼 컨테이너 */
+.search-form {
+  position: relative; /* 검색 버튼을 이 폼 내부에 배치하기 위한 기준점 */
+  width: 400px; /* 검색 폼의 적절한 너비 설정 */
+}
+
+/* 검색 입력창 스타일 */
+.search-input {
+  width: 100%; /* 부모 요소인 .search-form에 꽉 차게 */
+  padding: 10px 40px 10px 15px; /* 버튼 공간 확보를 위해 오른쪽 패딩 추가 */
+  border: 1px solid #ccc;
+  border-radius: 50px; /* 둥근 모서리 */
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* 검색 버튼 스타일 */
+.search-btn {
+  position: absolute; /* 검색 입력창 내부에 절대 위치로 배치 */
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%); /* 세로 중앙 정렬 */
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* FIND 아이콘 스타일 (material-icons와 연결) */
+.search-icon {
+  width: 28px; /* 아이콘 이미지의 너비 */
+  height: 28px; /* 아이콘 이미지의 높이 */
+}
+
+/* .box는 이제 불필요하거나 용도를 변경해야 함 */
+.box {
+  /* 현재 .rectangle이 fixed되어 있어 box가 보이지 않거나 용도가 불명확합니다. */
+  /* 필요에 따라 이 요소의 용도를 재정의해야 합니다. */
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(110px, auto); /* 기본 행 높이 설정 */
+  gap: 20px;
+  padding: 20px;
+  margin-top: 97px;
+}
+
+/* 모든 카드에 적용되는 공통 스타일 */
+.card {
+  background-color: white;
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 첫 번째 행의 세 개의 작은 카드 */
+.card-small {
+  grid-row: 1;
+  height: 130px;
+  padding:24px;
+}
+
+/* 첫 번째 행의 넓은 카드 */
+.card-wide {
+  grid-column: span 2;
+  /* 넓은 카드는 두 번째 행을 차지하도록 설정 */
+  grid-row: 2;
+  min-height: 350px;
+}
+
+/* 넓은 카드 옆에 위치한 두 개의 작은 카드 컨테이너 */
+.side-cards-container {
+  display: flex;
+  flex-direction: column;
+  /* 두 카드 사이의 간격 */
+  gap: 20px;
+}
+
+/* 넓은 카드 옆의 첫 번째(작은) 카드 */
+.card-side-first {
+  height: 120px; /* 작게 설정 */
+}
+
+/* 넓은 카드 옆의 두 번째(큰) 카드 */
+.card-side-second {
+  /* 남는 공간을 모두 차지하도록 설정 */
+  flex-grow: 1;
+  min-height: 250px; /* 최소 높이 설정 */
+}
+
+/* 동그라미 스타일 */
+.circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  /* 원이 카드 왼쪽에 붙도록 */
+  margin-left: 0;
+
+  display: flex;
+  justify-content: center; /* 가로 중앙 정렬 */
+  align-items: center;     /* 세로 중앙 정렬 */
+}
+
+/* place 클래스의 원 색상 */
+.place {
+  background-color: #FFF5AD; /* 노랑색 */
+}
+
+/* calendar 클래스의 원 색상 */
+.calendar {
+  background-color: #D5EBFF; /* 파란색 */
+}
+
+/* updown 클래스의 원 색상 */
+.updown {
+  background-color: #FFCF8D; /* 주황색 */
+}
+
+.what {
+  background-color: #FFD5F0; /* 분홍색 */
+}
+
+.littletitle h4{
+  margin-bottom: 15px; /* 제목 아래에 10px의 간격을 둡니다. */
+  font-weight: 600;
+}
+
+#arrow-up,
+#arrow-down {
+  display: none; /* 초기에는 두 SVG 모두 숨김 */
+}
+
+.card-graph {
+  grid-column: span 3; /* 3개의 열을 모두 차지하도록 설정 */
+  width: auto; /* 또는 width: 100%를 제거 */
+  min-height: 300px; /* 그래프가 들어갈 적절한 높이 설정 */
+  padding: 20px;
+  display: flex; /* Flexbox를 활성화합니다. */
+  justify-content: flex-start; /* 가로축에서 시작(왼쪽) 위치로 정렬합니다. */
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.card-graph2 {
+  grid-column: span 3; /* 3개의 열을 모두 차지하도록 설정 */
+  width: auto; /* 또는 width: 100%를 제거 */
+  min-height: 300px; /* 그래프가 들어갈 적절한 높이 설정 */
+}
+
+/* 3번째 박스 */
+.third.header {
+  display: flex;
+  align-items: center; /* 아이콘과 텍스트를 세로 중앙에 정렬 */
+  gap: 8px; /* 아이콘과 텍스트 사이의 간격 설정 */
+}
+
+
+/* 슬라이더 컨테이너 (선택 사항) */
+.slider-container {
+    width: 400px; /* 이미지와 유사하게 너비 조정 */
+    margin: 10px auto;
+    text-align: center;
+}
+
+/* 커스텀 슬라이더의 기본 스타일 재설정 */
+.custom-slider {
+    -webkit-appearance: none; /* WebKit 브라우저의 기본 스타일 제거 */
+    appearance: none; /* 표준 브라우저의 기본 스타일 제거 */
+    width: 100%;
+    height: 10px; /* 슬라이더 트랙의 높이 */
+    border-radius: 5px; /* 모서리를 둥글게 */
+    outline: none; /* 포커스 시 나타나는 외곽선 제거 */
+    
+    /* === 그라데이션 배경 설정 === */
+    background: linear-gradient(
+        to right,
+        #ee9090ff 15%,         
+        #d3e061ff 50%, 
+        #a0ff7aff 60%,
+        #47a6ffff 100%        
+    );
+}    
+
+/* 슬라이더 핸들(thumb) 스타일 */
+.custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* WebKit 브라우저의 기본 핸들 스타일 제거 */
+  appearance: none;
+  width: 15px; /* 핸들의 너비 */
+  height: 15px; /* 핸들의 높이 */
+  background: #ffffffff; /* 핸들의 배경색 (긍정적인 녹색) */
+  border: 2px solid #817c7cff;
+  cursor: pointer; /* 마우스를 올렸을 때 커서 모양 변경 */
+  border-radius: 50%; /* 핸들을 원형으로 만듦 */
+}
+
+.sentiment-analysis {
+  flex: 2; /* 2의 비율을 차지 */
+
+}
+
+.label {
+  font-weight: 450; /* 텍스트를 굵게 */
+  font-size: 21px;   /* 폰트 크기를 16px */
+}
+
+
+
+.analysis-box {
+  display: flex;/* 세로 방향으로 정렬 */
+  flex-direction: column;/* 가로 및 세로 축에서 가운데 정렬 */
+  justify-content: center; /* 세로축 가운데 정렬 */
+  align-items: center; /* 가로축 가운데 정렬 */
+  width: 83%;
+  flex-grow: 1;
+  gap: 8px; /* 요소들 간에 간격을 추가하여 보기 좋게 만듭니다. */
+}
+
+.visualization-area {
+  flex: 3; /* 4의 비율을 차지 */
+  width: 100%;
+  height: 97%;
+  /* border: 1px solid #333;*/
+  border-left: 2px solid #ccc; /* 왼쪽에 선 추가 */
+  top: 3%; /* 위쪽 여백 */
+  bottom: 3%; /* 아래쪽 여백 */
+}
+
+.keyword-ranking {
+  flex: 2; /* 2의 비율을 차지 */
+  width: 100%;
+  height: 97%;
+  /* border: 1px solid #333; */
+  border-left: 2px solid #ccc; /* 왼쪽에 선 추가 */
+  top: 3%; /* 위쪽 여백 */
+  bottom: 3%; /* 아래쪽 여백 */
+}
+
+
+.visualization-area h2,
+.keyword-ranking h2 {
+  margin-top: -25px; /* 위쪽에 5px 여백 추가 */
+  margin-left: 10px; /* 아래쪽에 10px 여백 추가 */
+  font-weight: bold; /* 폰트를 더 굵게 만듭니다 */
+}
+
+.sentiment-section {
+  display: flex; /* Flexbox를 활성화하여 자식 요소들을 제어합니다. */
+  flex-direction: column; /* 자식 요소들을 세로 방향으로 정렬합니다. */
+  align-items: center; /* 가로 축에서 중앙 정렬합니다. */
+  gap: 15px; /* 요소들 간에 간격을 추가하여 보기 좋게 만듭니다. */
+  padding: 10px; /* 내부 여백 추가 */
+  height: 220px;
+  width: 220px;
+}
+
+.sentiment-analysis {
+  border: 2px solid #b8b7b7ff; /* 1px 두께의 검은색 테두리 */
+  display: flex; /* Flexbox 활성화 */
+  flex-direction: column; /* 세로 정렬 */
+  gap: 10px; /* 자식 요소들 사이에 10px 간격 추가 */
+  /* 수직(세로)축 정렬 */
+  justify-content: center;
+  /* 수평(가로)축 정렬 */
+  align-items: center;
+
+  /* 둥근 모서리 */
+  border-radius: 15px;
+  height: 100%;
+  width: 100%;
+}
+
+
+.card-graph {
+  flex-direction: column;
+  display: flex; 
+}
+
+
+.three-content {
+  display: flex; /* Grid 컨테이너로 설정 */
+  height: 300px;
+  width: 100%;
+  position: relative;
+  justify-content: center; /* 가로축(메인 축)에서 중앙 정렬 */
+  align-items: center; /* 세로축(교차 축)에서 중앙 정렬 */
+}
+
+/* 그리드 아이템들 (예: .item1, .item2, .item3) */
+.three-content > div {
+  position: relative;
+}
+
+
+
+/*긍정/부정 표시*/
+.thumbs-updown {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.thumbs-updown svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none; /* 기본적으로 모든 아이콘 숨김 */
+}
+
+
+
+/* sns링크이동 */
+.card-side-second {
+  display: flex; /* Flexbox 활성화 */
+  flex-direction: column; /* 자식 요소를 세로로 정렬 */
+  padding: 15px; /* 내부 여백 추가 */
+  border-radius: 15px; /* 모서리를 둥글게 */
+  /* 필요에 따라 배경색 추가 */
+  background-color: #ffffff;
+}
+
+/* SNS div들에 각각 다른 색상과 스타일 적용 */
+.sns1,
+.sns2,
+.sns3 {
+  height: 50px;
+  width: 100%;
+  border-radius: 15px; /* 모서리를 둥글게 */
+  display: flex;
+  justify-content: left; /* 가로(수평) 중앙 정렬 */
+  align-items: center; /* 세로(수직) 중앙 정렬 */
+  color: #3f3f3fff;
+  font-weight: bold; /* 글자를 굵게 만듭니다 */
+}
+
+.more {
+  height: 30px;
+  width: 100%;
+  border-radius: 15px; /* 모서리를 둥글게 */
+  background-color: #c9c9c9ff;
+  display: flex;
+  justify-content: center; /* 가로(수평) 중앙 정렬 */
+  align-items: center; /* 세로(수직) 중앙 정렬 */
+  color: #3f3f3fff;
+  font-weight: bold; /* 글자를 굵게 만듭니다 */
+}
+
+.sns1 {
+  background-color: #ffeff5; /* 첫 번째 div 색상 */
+}
+
+.sns2 {
+  background-color: #d7fbff; /* 두 번째 div 색상 */
+}
+
+.sns3 {
+  background-color: #e3f9e7; /* 세 번째 div 색상 */
+}
+
+/* (선택 사항) h2 요소와 첫 번째 SNS div 사이의 간격 */
+.card-side-second h2 {
+  margin-bottom: 5px;
+  display: flex; /* Flexbox 활성화 */
+  align-items: baseline; /* 텍스트 기준선에 맞춰 정렬 */
+  gap: 5px; /* h2 텍스트와 p 태그 사이 간격 추가 */
+  font-weight: bold; /* 글자를 굵게 만듭니다 */
+}
+
+.sns-icon {
+  width: 24px; /* 아이콘의 너비 */
+  height: 24px; /* 아이콘의 높이 */
+  margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
+  margin-left: 10px;
+}
