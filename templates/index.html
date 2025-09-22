@@ -32,15 +32,17 @@
       </div><div class="littletitle"> <h4>최다 언급량 일자</h4>
         <b id="mostdate">언제</b></div>
       </div>
-      <div class="card card-small"><div class="circle updown">
-        <svg id="arrow-down" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M46 36L27 17L17 27L2 12M46 36H34M46 36V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <svg id="arrow-up" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M46 12L27 31L17 21L2 36M46 12H34M46 12V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg> 
-      </div><div class="littletitle"><h4>이전기간대비 언급량 증감률</h4>
-        <b id="change">저쩌구</b></div>
+      <div class="card card-small">
+        <div class="circle updown">
+          <svg id="arrow-down" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M46 36L27 17L17 27L2 12M46 36H34M46 36V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg id="arrow-up" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M46 12L27 31L17 21L2 36M46 12H34M46 12V24" stroke="#9C5C04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg> 
+        </div><div class="littletitle"><h4>이전기간대비 언급량 증감률</h4>
+          <b id="change">저쩌구</b></div>
+        <h6 id="last-month">*지난달 기준 대비</h6>
       </div>
 
       <div class="card card-wide"></div>
@@ -53,14 +55,24 @@
           <b id="truepoint">여기</b></div>
           </div>
           <div class="card card-side-second">
-            <h2>총 <p id="total">000</p>건의 결과</h2>
-            <div class="sns1"><img src="../img/instagram.png" alt="인스타그램 아이콘" class="sns-icon"/>인스타그램</div>
-            <div class="sns2"><img src="../img/twitter.png" alt="트위터 아이콘" class="sns-icon"/>트위터</div>
-            <div class="sns3"><img src="../img/naver.png" alt="네이버 아이콘" class="sns-icon"/>네이버 블로그</div>
-            <div class="more"> 더 보기 </div>
+            <h2>총 <p id="total">000</p>개의 결과보기</h2>
+            <div id="sns-list-container">
+                <!-- 동적으로 추가될 항목 -->
+                <div class="sns1">
+                    <div class="title-wrapper">
+                        <img src="../img/google_icon.png" alt="구글 아이콘" class="sns-icon"/>
+                        <p>제목(예시데이터 count안함)</p>
+                    </div>
+                    <div class="meta-wrapper">
+                        <span>작성자</span>
+                        <span>작성날짜</span>
+                    </div>
+                </div>
+                <!-- ... -->
+            </div>
           </div>
         </div>
-      <div class="card card-graph">
+        <div class="card card-graph">
         <div class="third header">
           <span class="icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9.33329 14.6667L14.6666 2.66666C15.7275 2.66666 16.7449 3.08808 17.4951 3.83823C18.2452 4.58838 18.6666 5.60579 18.6666 6.66666V12H26.2133C26.5998 11.9956 26.9827 12.0753 27.3354 12.2336C27.6881 12.3919 28.0021 12.625 28.2558 12.9167C28.5094 13.2084 28.6966 13.5518 28.8044 13.923C28.9122 14.2942 28.938 14.6845 28.88 15.0667L27.04 27.0667C26.9435 27.7025 26.6205 28.2821 26.1305 28.6987C25.6405 29.1152 25.0164 29.3406 24.3733 29.3333H9.33329M9.33329 14.6667V29.3333M9.33329 14.6667H5.33329C4.62605 14.6667 3.94777 14.9476 3.44767 15.4477C2.94758 15.9478 2.66663 16.6261 2.66663 17.3333V26.6667C2.66663 27.3739 2.94758 28.0522 3.44767 28.5523C3.94777 29.0524 4.62605 29.3333 5.33329 29.3333H9.33329" stroke="#23AF00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -102,7 +114,15 @@
           </div>
         </div>
       </div>
-      <div class="card card-graph2"></div>
+      <div class="card card-graph2"><div class="graph2-title"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 40H42M33 7.00003C33.7956 6.20438 34.8748 5.75739 36 5.75739C36.5572 5.75739 37.1088 5.86712 37.6236 6.08034C38.1383 6.29355 38.606 6.60606 39 7.00003C39.394 7.39399 39.7065 7.8617 39.9197 8.37644C40.1329 8.89118 40.2426 9.44287 40.2426 10C40.2426 10.5572 40.1329 11.1089 39.9197 11.6236C39.7065 12.1384 39.394 12.6061 39 13L14 38L6 40L8 32L33 7.00003Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2>AI분석 리포트</h2></div>
+        <div class="report-content"></div>
+      </div>
+      <div class="card card-graph3"><div class="graph3-title"><img src="../img/cross_line.png" alt="교차분석" class="cross-icon"/><h2>검색량-언급량 교차 분석</h2></div>
+        <div class="cross-content"></div>
+      </div>
     </div>
 
 
@@ -116,8 +136,8 @@
       // 이 값은 서버에서 가져오거나 다른 로직을 통해 생성될 수 있습니다.
       const newChanelValue = "YOUTUBE"; //최다 언급채절 (변수)
       const newMostdateValue = "2025.09.22"; //최다 언급량 일자 (변수)
-      const newChangeValue = "12"; //증감률 (변수)
-      const newTruepointValue = "INSTARGRAM"; //이슈 확산 포인트 (변수)
+      const newChangeValue = "0"; //증감률 (변수)
+      const newTruepointValue = "네이버 블로그(블로그이름B)"; //이슈 확산 포인트 (변수)
       
       
       // ID를 사용하여 HTML 요소를 가져옵니다.
@@ -171,16 +191,108 @@
 
         // 값에 따라 SVG를 표시하거나 숨깁니다.
         if (changeValue > 0) {
-          arrowUp.style.display = 'block';
-          arrowDown.style.display = 'none';
+            changeElement.textContent = `▲ ${changeValue.toFixed(1)}%`;
+            changeElement.style.color = '#00C853'; // 긍정적인 색상 (녹색)
+            arrowUp.style.display = 'block';
+            arrowDown.style.display = 'none';
         } else if (changeValue < 0) {
-          arrowUp.style.display = 'none';
-          arrowDown.style.display = 'block';
+            changeElement.textContent = `▼ ${Math.abs(changeValue).toFixed(1)}%`;
+            changeElement.style.color = '#F44336'; // 부정적인 색상 (빨간색)
+            arrowDown.style.display = 'block';
+            arrowUp.style.display = 'none';
         } else {
-          // 값이 0이거나 유효하지 않으면 모두 숨깁니다.
-          arrowUp.style.display = 'none';
-          arrowDown.style.display = 'none';
+            changeElement.textContent = `0.0%`;
+            changeElement.style.color = '#888'; // 변화 없음 (회색)
+            arrowUp.style.display = 'none';
+            arrowDown.style.display = 'none';
         }
+
+        // 임시 데이터 (실제로는 API에서 받아올 데이터)
+        const allData = [
+            { title: '구글 블로그 제목 1', date: '2023.10.26', author: '작성자A', source: 'google' },
+            { title: '네이버 블로그 제목 1', date: '2023.10.25', author: '블로그이름B', source: 'naver' },
+            { title: '구글 블로그 제목 2', date: '2023.10.24', author: '작성자C', source: 'google' },
+            { title: '네이버 블로그 제목 2', date: '2023.10.23', author: '블로그이름D', source: 'naver' },
+            { title: '구글 블로그 제목 3', date: '2023.10.22', author: '작성자E', source: 'google' },
+            { title: '네이버 블로그 제목 3', date: '2023.10.21', author: '블로그이름F', source: 'naver' },
+            // 더 많은 데이터 추가...
+        ];
+
+        const totalElement = document.getElementById('total');
+        const container = document.getElementById('sns-list-container');
+        const scrollableElement = document.querySelector('.card-side-second');
+
+        let itemsPerPage = 5;
+        let loadedItems = 0;
+        
+        // SVG 아이콘 경로
+        const googleIconUrl = "../img/google_icon.png";
+        const naverIconUrl = "../img/naver.png";
+
+        // 총 결과 개수 업데이트
+        totalElement.textContent = allData.length;
+
+        // SNS 항목을 생성하고 DOM에 추가하는 함수
+        const createSnsItem = (data) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add(data.source === 'google' ? 'sns1' : 'sns2');
+
+            const titleWrapper = document.createElement('div');
+            titleWrapper.classList.add('title-wrapper');
+
+            const icon = document.createElement('img');
+            icon.src = data.source === 'google' ? '../img/google_icon.png' : '../img/naver.png';
+            icon.alt = data.source === 'google' ? '구글 아이콘' : '네이버 아이콘';
+            icon.classList.add('sns-icon');
+
+            const titleP = document.createElement('p');
+            titleP.textContent = data.title;
+
+            titleWrapper.appendChild(icon);
+            titleWrapper.appendChild(titleP);
+
+            const metaWrapper = document.createElement('div');
+            metaWrapper.classList.add('meta-wrapper');
+
+            const dateSpan = document.createElement('span');
+            dateSpan.textContent = data.date;
+
+            const authorSpan = document.createElement('span');
+            authorSpan.textContent = data.author;
+
+            metaWrapper.appendChild(authorSpan);
+            metaWrapper.appendChild(dateSpan);
+
+            itemDiv.appendChild(titleWrapper);
+            itemDiv.appendChild(metaWrapper);
+            container.appendChild(itemDiv);
+        };
+
+        // 추가 데이터를 로드하는 함수
+        const loadMoreItems = () => {
+            const start = loadedItems;
+            const end = Math.min(loadedItems + itemsPerPage, allData.length);
+
+            if (start < end) {
+                for (let i = start; i < end; i++) {
+                    createSnsItem(allData[i]);
+                }
+                loadedItems = end;
+            }
+        };
+
+        // 무한 스크롤 이벤트 리스너
+        scrollableElement.addEventListener('scroll', () => {
+            if (scrollableElement.scrollTop + scrollableElement.clientHeight >= scrollableElement.scrollHeight - 100) {
+                loadMoreItems();
+            }
+        });
+
+        // 초기 로드
+        loadMoreItems();
+
+
+
       });
     </script>
   </body>
