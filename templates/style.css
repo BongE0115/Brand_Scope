@@ -92,6 +92,16 @@ body {
   grid-row: 1;
   height: 130px;
   padding:24px;
+  position: relative;
+}
+
+#last-month {
+  position: absolute; /* .card-small을 기준으로 위치를 잡습니다. */
+  top: 10px; /* 상단에서 10px 떨어진 위치 */
+  right: 20px; /* 오른쪽에서 20px 떨어진 위치 */
+  margin: 0; /* 기본 마진 제거 */
+  font-size: 0.8rem; /* 텍스트 크기 조절 */
+  color: #888; /* 텍스트 색상 조절 */
 }
 
 /* 첫 번째 행의 넓은 카드 */
@@ -157,6 +167,7 @@ body {
 .littletitle h4{
   margin-bottom: 15px; /* 제목 아래에 10px의 간격을 둡니다. */
   font-weight: 600;
+  
 }
 
 #arrow-up,
@@ -167,7 +178,7 @@ body {
 .card-graph {
   grid-column: span 3; /* 3개의 열을 모두 차지하도록 설정 */
   width: auto; /* 또는 width: 100%를 제거 */
-  min-height: 300px; /* 그래프가 들어갈 적절한 높이 설정 */
+  min-height: 400px; /* 그래프가 들어갈 적절한 높이 설정 */
   padding: 20px;
   display: flex; /* Flexbox를 활성화합니다. */
   justify-content: flex-start; /* 가로축에서 시작(왼쪽) 위치로 정렬합니다. */
@@ -179,13 +190,41 @@ body {
   grid-column: span 3; /* 3개의 열을 모두 차지하도록 설정 */
   width: auto; /* 또는 width: 100%를 제거 */
   min-height: 300px; /* 그래프가 들어갈 적절한 높이 설정 */
+  position: relative;
+}
+
+
+.card-graph3 {
+  grid-column: span 3; /* 3개의 열을 모두 차지하도록 설정 */
+  width: auto; /* 또는 width: 100%를 제거 */
+  min-height: 500px; /* 그래프가 들어갈 적절한 높이 설정 */
+  position: relative;
+}
+
+.graph2-title, .graph3-title {
+  position: absolute; /* 부모 요소를 기준으로 절대 위치 지정 */
+  top: 10px; /* 상단에서 10px 간격 */
+  left: 10px; /* 왼쪽에서 10px 간격 */
+  display: flex; /* 자식 요소들을 Flex 컨테이너로 만듭니다. */
+  align-items: center; /* 자식 요소들을 수직 방향으로 중앙에 정렬합니다. */
+}
+
+.graph2-title h2, .graph3-title h2, .third.header h2 {
+  margin-left: 10px; /* 아이콘과 텍스트 사이에 간격 추가 */
+  font-weight: bold; /* 폰트를 더 굵게 만듭니다 */
+  font-size: 20px;
+}
+
+.cross-icon {
+  width: 50px; /* 아이콘의 너비 */
+  height: 50px; /* 아이콘의 높이 */
 }
 
 /* 3번째 박스 */
 .third.header {
   display: flex;
   align-items: center; /* 아이콘과 텍스트를 세로 중앙에 정렬 */
-  gap: 8px; /* 아이콘과 텍스트 사이의 간격 설정 */
+  gap: 10px; /* 아이콘과 텍스트 사이의 간격 설정 */
 }
 
 
@@ -350,20 +389,29 @@ body {
   border-radius: 15px; /* 모서리를 둥글게 */
   /* 필요에 따라 배경색 추가 */
   background-color: #ffffff;
+  height: 400px;      /* 스크롤 영역 높이 지정 */
+  overflow-y: auto;   
+}
+
+.card-side-second::-webkit-scrollbar {
+  display: none; /* 스크롤바 숨김 */
 }
 
 /* SNS div들에 각각 다른 색상과 스타일 적용 */
 .sns1,
-.sns2,
-.sns3 {
+.sns2 {
   height: 50px;
-  width: 100%;
-  border-radius: 15px; /* 모서리를 둥글게 */
+  width: 325px;
+  border-radius: 15px;
   display: flex;
-  justify-content: left; /* 가로(수평) 중앙 정렬 */
-  align-items: center; /* 세로(수직) 중앙 정렬 */
+  justify-content: space-between;
   color: #3f3f3fff;
-  font-weight: bold; /* 글자를 굵게 만듭니다 */
+  font-weight: bold;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  align-items: center;
 }
 
 .more {
@@ -379,16 +427,14 @@ body {
 }
 
 .sns1 {
-  background-color: #ffeff5; /* 첫 번째 div 색상 */
+  background-color: #e5f1ff; /* 첫 번째 div 색상 */
 }
 
 .sns2 {
-  background-color: #d7fbff; /* 두 번째 div 색상 */
+  background-color: #e0fdde; /* 두 번째 div 색상 */
 }
 
-.sns3 {
-  background-color: #e3f9e7; /* 세 번째 div 색상 */
-}
+
 
 /* (선택 사항) h2 요소와 첫 번째 SNS div 사이의 간격 */
 .card-side-second h2 {
@@ -403,5 +449,39 @@ body {
   width: 24px; /* 아이콘의 너비 */
   height: 24px; /* 아이콘의 높이 */
   margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
-  margin-left: 10px;
+}
+
+
+/* 새로운 콘텐츠를 위한 CSS 스타일 */
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.content-wrapper p {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.meta-info {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+
+
+/* 제목 컨테이너 스타일 */
+.title-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+/* 메타 정보 컨테이너 스타일 */
+.meta-wrapper {
+    display: flex;
+    flex-direction: column; /* 세로 정렬 */
+    align-items: flex-end; /* 오른쪽 정렬 */
+    font-size: 0.8rem;
+    color: #808080ff;
 }
