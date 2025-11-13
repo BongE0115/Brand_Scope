@@ -1,6 +1,14 @@
-flask run
+flask 
 pandas==2.1.0
 numpy==1.24.3
 jupyter==1.0.0
 matplotlib==3.7.2
 scikit-learn==1.3.0
+
+
+pandas
+requests
+numpy
+matplotlib
+seaborn
+wordcloud

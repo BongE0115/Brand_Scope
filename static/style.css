@@ -1,5 +1,3 @@
-/* --- 기존 style.css 내용은 모두 삭제하고 아래 코드로 대체하세요 --- */
-
 body {
   background-color: #f0f0f0; /* 밝은 회색으로 설정 */
 }
@@ -33,7 +31,7 @@ body {
 /* 검색 폼 컨테이너 */
 .search-form {
   position: relative;
-  width: 400px;
+  width: 600px;
 }
 
 /* 검색 입력창 스타일 */
@@ -543,4 +541,3 @@ body {
   margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
 }
   
-}

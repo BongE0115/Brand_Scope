@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>분석 오류</title>
+    <link rel="stylesheet" href="/static/style.css"> 
+</head>
+<body>
+    <div class="container">
+        <h1>분석 중 오류가 발생했습니다.</h1>
+        <div class="error-card">
+            <p><strong>검색어:</strong> "{{ query }}"</p>
+            <p><strong>오류 메시지:</strong></p>
+            <blockquote>
+                {{ error_message }}
+            </blockquote>
+            <a href="/" class="btn-home">홈으로 돌아가기</a>
+        </div>
+    </div>
+</body>
+</html>
