@@ -253,7 +253,7 @@
           </div>
           <div class="visualization-area">
             {% if data %}
-            <img src="/static/img/sentiment_positive_wc.png" alt="통합 워드클라우드" style="width: 100%; height: auto;">
+            <img src="/static/img/sentiment_combined_wc.png" alt="통합 워드클라우드" style="width: 100%; height: auto;">
             {% else %}
             <div class="graph-placeholder small">시각화 자료</div>
             {% endif %}
@@ -312,7 +312,7 @@
             <h2>경쟁사 비교</h2>
             <span class="dropdown-arrow"></span> </div>
           
-          <form id="searchForm" action="/search" method="GET" class="search-form">
+          <form id="competitorForm" action="/compare_competitor" method="GET" class="search-form">
           <input
             type="text"
             name="search"
@@ -328,11 +328,13 @@
           </button>
         </form>
         </div>
-        {% if data and data.visualization_urls.competitor_comparison %}
-        <img src="{{ data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 100%; height: auto;">
-        {% else %}
-        <div class="graph-placeholder large">경쟁사 데이터가 없거나 분석되지 않았습니다.</div>
-        {% endif %}
+        <div style="display: flex; justify-content: center;">
+          {% if data and data.competitor_data and data.competitor_data.visualization_urls.competitor_comparison %}
+          <img src="{{ data.competitor_data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 50%; height: auto;">
+          {% else %}
+          <div class="graph-placeholder large">경쟁사 데이터가 없거나 분석되지 않았습니다.</div>
+          {% endif %}
+        </div>
       </div>
     </div>
 

@@ -244,6 +244,7 @@ body {
   align-items: center;
   gap: 15px;
   width: 100%;
+  justify-content: center;
 }
 
 /* 그래프 제목 (AI, 교차분석) */

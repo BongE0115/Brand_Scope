@@ -586,17 +586,17 @@ def visualize_competitor_mention_comparison(own_query, own_df, competitor_query,
         print("경고: 비교할 월 데이터가 부족합니다. (최소 2개월 필요)")
         return None
 
-    plt.figure(figsize=(14, 7))
+    plt.figure(figsize=(10, 5))
     sns.lineplot(x=combined_counts.index, y=own_query, data=combined_counts, marker='o', color='tab:blue', label=own_query)
     sns.lineplot(x=combined_counts.index, y=competitor_query, data=combined_counts, marker='s', color='tab:red', label=competitor_query)
 
-    plt.title(f'{own_query} vs {competitor_query} 월별 언급량 추이 비교 (최근 12개월)', fontsize=16) 
-    plt.xlabel('월', fontsize=12) 
-    plt.ylabel('총 언급량', fontsize=12)
+    plt.title(f'{own_query} vs {competitor_query} 월별 언급량 추이 비교 (최근 12개월)', fontsize=14) 
+    plt.xlabel('월', fontsize=11) 
+    plt.ylabel('총 언급량', fontsize=11)
     plt.xticks(combined_counts.index, rotation=45) 
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=11)
     plt.grid(axis='y', linestyle='--')
-    plt.tight_layout()
+    plt.subplots_adjust(left=0.12, right=0.92, top=0.92, bottom=0.15)
     
     print("-> 자사/경쟁사 언급량 비교 시각화 플롯 객체 생성 완료.")
     return plt
@@ -748,12 +748,17 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     }
 
     # 1. 유효성 검증
-    if not is_valid_query(search_query) or not is_brand_name(search_query, client_id, client_secret):
-        analysis_results["message"] = "자사 검색어 유효성/브랜드명 검증에 실패하여 분석을 종료합니다."
+    if not is_valid_query(search_query):
+        analysis_results["message"] = "자사 검색어 유효성 검증에 실패하여 분석을 종료합니다."
         return analysis_results
     
+    # 브랜드명 검증 (경쟁사 분석일 때는 스킵)
+    if not competitor_query:
+        if not is_brand_name(search_query, client_id, client_secret):
+            analysis_results["message"] = "브랜드명 검증에 실패하여 분석을 종료합니다."
+            return analysis_results
+    
     is_comp_valid = competitor_query and is_valid_query(competitor_query)
-    if not is_comp_valid: competitor_query = None
 
     print("\n==================================================")
     print("✅ 데이터 수집 및 분석을 시작합니다.")
@@ -789,10 +794,9 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     # 6. 시각화 및 URL 저장
     gc.collect() 
     
-    # ⚠️ [수정] 누락된 시각화 함수 호출 및 URL 저장 로직 추가
     urls = {}
     
-    # 6-1. 감성 워드클라우드 (top7_keywords_df 변수 확보)
+    # 6-1. 감성 워드클라우드
     pos_plot, neg_plot, all_plot, top7_keywords_df = visualize_sentiment_word_clouds(
         total_df, POSITIVE_WORDS, NEGATIVE_WORDS
     )
@@ -825,7 +829,7 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
         "mention_vs_search_trend.png", static_folder
     )
     
-    # 6-5. 경쟁사 비교
+    # 6-5. 경쟁사 비교 (경쟁사 데이터가 있을 때만)
     if is_comp_valid and not competitor_df.empty:
         urls["competitor_comparison"] = save_and_get_url(
             lambda: visualize_competitor_mention_comparison(search_query, total_df, competitor_query, competitor_df),
@@ -834,8 +838,8 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     else:
         urls["competitor_comparison"] = None
     
-    # 7. 최종 결과 딕셔너리 구성 (템플릿 연동을 위해 키 구조 평탄화)
-    analysis_results = {} # 분석 결과를 새로운 딕셔너리로 평탄화하여 구성
+    # 7. 최종 결과 딕셔너리 구성
+    analysis_results = {}
 
     # 기본 정보
     analysis_results["query"] = search_query
@@ -843,30 +847,25 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     analysis_results["status"] = "SUCCESS"
     analysis_results["message"] = f"'{search_query}' 분석이 완료되었습니다."
 
-    # 핵심 지표 (Key Metrics)
+    # 핵심 지표
     analysis_results["total_mentions"] = len(total_df)
     analysis_results["most_frequent_date"] = most_frequent_date_result
     analysis_results["mention_change_rate"] = mention_change_rate_result
     analysis_results["competitor_mentions"] = len(competitor_df) if competitor_query else 0
 
-    # 감성 분석 (Sentiment Analysis)
-    # 템플릿의 'label'과 'slider'에 바로 사용하기 쉽게 변환
+    # 감성 분석
     analysis_results["final_sentiment_label"] = final_sentiment 
     analysis_results["positive_percentage"] = int(float(f"{positive_score:.2f}")) 
     analysis_results["top_keywords"] = top7_keywords_df.to_dict('records') if not top7_keywords_df.empty else []
 
     # 트렌드 분석
-    analysis_results["outbreak_weeks"] = initial_outbreak_months # 이슈 확산 포인트
+    analysis_results["outbreak_weeks"] = initial_outbreak_months
     analysis_results["trend_data_available"] = not trend_df.empty
 
     # 시각화 URL
-    
-    
     analysis_results["visualization_urls"] = urls
 
-
-    # 🚀 [추가된 부분] 게시물 리스트 (제목, 날짜, 작성자, 링크) 추출
-    # total_df에서 필요한 4개 열만 추출하여 템플릿에 전달합니다.
+    # 게시물 리스트
     analysis_results["post_list"] = total_df[[
         'title', 
         'postdate', 
@@ -877,10 +876,8 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
         'channel_name': 'author'
     }).to_dict('records')
 
-    # 🚀 [추가된 부분] AI 리포트 공간 (일단 빈 문자열로 할당)
-    # 추후 LLM 등을 활용하여 내용을 채울 수 있도록 키만 남깁니다.
+    # AI 리포트
     analysis_results["ai_report"] = "AI 리포트 내용을 준비 중입니다. 잠시 후 확인해 주세요." 
-
 
     print("\n==================================================")
     print("✅ 최종 분석 결과 JSON 생성 완료. Flask 응답 준비.")
