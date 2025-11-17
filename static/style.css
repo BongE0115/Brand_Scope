@@ -22,6 +22,38 @@ body {
   justify-content: center;
 }
 
+
+.box {
+    /* h3의 absolute 위치를 위한 기준점 */
+    position: relative; 
+    /* .box의 다른 스타일 (예: background-color, height, width 등)은 유지 */
+    background-color: #ADD8E6; /* 예시: 파란색 배경 */
+    height: 150px; /* 예시: h3와 다른 콘텐츠를 담을 충분한 높이 */
+    overflow: visible; /* 혹시 내용이 잘릴까 봐 */
+}
+
+.box h3 {
+    /* h3를 절대 위치로 설정 */
+    position: fixed; 
+    
+    /* 파란 영역의 왼쪽 상단에 배치 (여백 10px) */
+    top: 23px;    
+    left: 20px;   
+    
+    /* 다른 모든 요소 위에 표시되도록 z-index를 매우 높게 설정 */
+    z-index: 9999; /* 매우 높은 값으로, 다른 어떤 요소보다 위에 오게 함 */
+    
+    /* 기본 h3 마진은 제거 */
+    margin: 0; 
+    
+    /* 글자색이 배경에 묻히지 않도록 확실히 지정 */
+    color: rgb(255, 255, 255); /* 파란 배경 위에 잘 보이도록 흰색 지정 */
+    
+    /* 글씨 크기나 굵기 등 필요에 따라 추가 */
+    font-size: 24px;
+    font-weight: bold;
+}
+
 /* 로고 이미지 스타일 */
 .university-element {
   width: 50px;
@@ -36,6 +68,17 @@ body {
 
 /* 검색 입력창 스타일 */
 .search-input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: #f7f7f7; /* 시안에 맞춰 약간 어둡게 */
+  border: none; /* 테두리 제거 */
+}
+
+.search-input-first {
   width: 100%;
   padding: 10px 40px 10px 15px;
   border: 1px solid #ccc;
@@ -207,12 +250,14 @@ body {
 
 /* 4행 (우): AI 리포트 */
 .card-graph2 {
-  grid-column: 3 / 4; /* 4행 3열 */
+  grid-column: 3 / 4;
   grid-row: 4;
   width: auto;
-  min-height: 500px;
+  height:auto;
+  min-height: auto; 
   position: relative;
-  flex-direction: column; /* 내부 요소 세로 정렬 */
+  display: flex;        
+  flex-direction: column; 
 }
 
 /* 5행: 연관어 비교 (신규) */
@@ -244,6 +289,7 @@ body {
   align-items: center;
   gap: 15px;
   width: 100%;
+  justify-content: center;
 }
 
 /* 그래프 제목 (AI, 교차분석) */
@@ -398,6 +444,20 @@ body {
   gap: 10px;
 }
 
+/* 키워드 랭킹 목록 내부 스크롤 설정: 많은 항목이 있어도 카드가 늘어나지 않도록 고정 높이와 내부 스크롤을 적용합니다. */
+.keyword-ranking .ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 항목 사이 여백 */
+  max-height: 300px;
+  /* 필요에 따라 조정하세요 */
+  overflow-y: auto;
+  padding-right: 8px;
+  /* 스크롤바와 내용 사이 여백 */
+  margin: 0;
+  /* 기본 ol 여백 제거 */
+}
 .visualization-area h2,
 .keyword-ranking h2 {
   margin: 0;
@@ -429,7 +489,7 @@ body {
 
 /* 키워드 랭킹 리스트 스타일 */
 .ranking-list {
-  list-style-type: decimal; /* 1. 2. 3. 숫자 표시 */
+  /*list-style-type: decimal;*/ /* 1. 2. 3. 숫자 표시 */
   padding-left: 30px;
   display: flex;
   flex-direction: column;
@@ -437,6 +497,7 @@ body {
   margin: 0;
 }
 .ranking-list li {
+  list-style-type: decimal; /* 1. 2. 3. 숫자 표시 */
   color: #333;
   font-weight: 500;
 }
@@ -446,6 +507,7 @@ body {
   background-color: #f0f0f0;
   border-radius: 5px;
   margin-top: 2px;
+  padding: 3px;
 }
 
 /* --- AI 리포트 --- */
@@ -541,3 +603,97 @@ body {
   margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
 }
   
+.title-wrapper {
+  display:flex;
+  padding: 3px;
+}
+
+/* 3. 마크다운 변환 태그 스타일링 (특수문자 대신 적용될 디자인) */
+
+/* 제목 (### -> h3) */
+.card-graph2 .report-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-top: 25px;   /* 위쪽 여백 */
+    margin-bottom: 10px; /* 아래쪽 여백 */
+    border-bottom: 2px solid #eee; /* 밑줄 장식 */
+    padding-bottom: 5px;
+}
+/* 첫 번째 제목은 위쪽 여백 제거 */
+.card-graph2 .report-content h3:first-child {
+    margin-top: 0;
+}
+
+/* 소제목 (#### -> h4) */
+.card-graph2 .report-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* 강조 ( **단어** -> strong ) */
+.card-graph2 .report-content strong {
+    color: #d35400;       /* 강조색 (주황 계열) */
+    background-color: #fff3cd; /* 형광펜 효과 (연한 노랑) */
+    padding: 0 4px;       /* 배경색 여백 */
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* 리스트 ( - 항목 -> ul, li ) */
+.card-graph2 .report-content ul {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+.card-graph2 .report-content li {
+    margin-bottom: 5px;
+    list-style-type: disc; /* 점 모양 */
+}
+
+.footer-area {
+    /* 배경색 지정 (이미지와 유사한 밝은 회색) */
+    background-color: #f7f7f7; 
+    /* 상단과 하단 여백 및 내부 패딩 설정 */
+    padding: 20px 0;
+    margin-top: 40px; 
+    /* 폰트 크기 및 색상 설정 */
+    font-size: 13px;
+    color: #666;
+    /* 텍스트 중앙 정렬 */
+    text-align: center;
+    /* 페이지 하단에 붙이려면 필요에 따라 position: fixed/absolute 사용 */
+}
+
+/* 링크 스타일 */
+.footer-area p {
+    color: #666; /* 링크 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+    padding: 0 5px; /* 링크 간 간격 */
+}
+
+/* 구분자 스타일 */
+.footer-area span {
+    color: #ccc; /* 구분점 색상 */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.out-name {
+    /* 🌟 핵심: 내부 요소(p와 span)를 가로로 배치 */
+    display: flex;
+    
+    /* 세로 축을 기준으로 요소들을 중앙에 정렬합니다. */
+    align-items: center; 
+    
+    /* (선택 사항) p와 span 사이의 간격을 좀 더 명확하게 지정 */
+    gap: 8px; 
+    
+    /* .footer-area의 text-align: center가 out-name 전체를 중앙에 배치합니다. */
+    /* out-name 내부의 텍스트 정렬은 p 태그에 맡깁니다. */
+    
+    /* out-name div 자체를 중앙에 배치하기 위해 필요한 경우: */
+    justify-content: center;
+}
