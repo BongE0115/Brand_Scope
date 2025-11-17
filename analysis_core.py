@@ -39,7 +39,7 @@ def save_and_get_url(plot_func, filename, static_folder):
             os.makedirs(img_save_path)
         # ---------------------
 
-        plot_object = plot_func() 
+        plot_object = plot_func()
 
         if plot_object is None:
              return None
@@ -50,10 +50,8 @@ def save_and_get_url(plot_func, filename, static_folder):
         if os.path.exists(filepath):
             os.remove(filepath)
 
-        plt.savefig(filepath, dpi=100)
-        plt.close('all') 
-
-        # 4. 브라우저가 이미지를 요청할 URL도 '/static/img/파일이름'으로 변경합니다.
+        plot_object.savefig(filepath, dpi=100)
+        plt.close('all')        # 4. 브라우저가 이미지를 요청할 URL도 '/static/img/파일이름'으로 변경합니다.
         return f"/static/img/{filename}" # 👈 /static/img/파일이름
 
     except Exception as e:
@@ -369,25 +367,32 @@ def visualize_post_frequency(df, frequency_type='monthly'):
             return None # None 반환으로 통일
 
     elif frequency_type == 'weekly':
+        # 현재 주차의 시작일 (월요일 시작으로 가정)
+        # 현재 주차 시작일 (월요일)
         current_week_start = (now - timedelta(days=now.weekday()))
+        
         # 현재 주보다 이전 데이터만 사용
         df_filtered = temp_df[temp_df['postdate'] < current_week_start].copy()
         start_date_offset = pd.DateOffset(months=6) # 주별은 최근 6개월 기준
-        freq_label = 'post_week_start'
 
         if not df_filtered.empty:
             # 최근 6개월 데이터만 필터링
             latest_date = df_filtered['postdate'].max()
             df_filtered = df_filtered[df_filtered['postdate'] >= (latest_date - start_date_offset)].copy()
-            # 주차 시작일(일요일)을 기준으로 그룹화
-            df_filtered[freq_label] = df_filtered['postdate'].dt.to_period('W-SAT').apply(lambda x: x.start_time + timedelta(days=1)).dt.normalize().dt.strftime('%Y-%m-%d')
-            counts_raw = df_filtered[freq_label].value_counts().sort_index()
             
-            # 빈 주를 채우기 위한 전체 레이블 생성 (일요일 시작)
-            min_date = counts_raw.index.min() if not counts_raw.empty else (now - start_date_offset).strftime('%Y-%m-%d')
-            max_date = counts_raw.index.max() if not counts_raw.empty else (now - timedelta(days=7)).strftime('%Y-%m-%d')
-
-            full_labels = pd.date_range(start=min_date, end=max_date, freq='W-SUN').strftime('%Y-%m-%d').tolist()
+            # ** 🎯 핵심 수정: resample을 사용하여 주차별 카운트 및 빈 주차 채우기 **
+            
+            # postdate를 인덱스로 설정
+            df_resample = df_filtered.set_index('postdate')
+            
+            # 'W'를 사용하여 주별로 재표본 추출 (기본적으로 일요일에 끝나는 주차로 카운트)
+            counts_resampled = df_resample.resample('W').size() # count.value_counts() 대신 size() 사용
+            
+            full_counts = counts_resampled
+            
+            # resample 결과 인덱스 (날짜 객체)를 'YYYY-MM-DD' 형식의 문자열 레이블로 변환
+            full_counts.index = full_counts.index.strftime('%Y-%m-%d')
+            full_labels = full_counts.index.tolist() # 재색인 불필요
             rotation_angle = 90
         else:
             print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
@@ -396,14 +401,15 @@ def visualize_post_frequency(df, frequency_type='monthly'):
     else:
         return None
 
-    if df_filtered.empty or counts_raw.empty:
+    if 'full_counts' not in locals() or full_counts.empty: # full_counts 변수 생성 확인 및 비어있는지 확인
         print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
         return None
 
-    # 전체 기간에 데이터 병합 (결측치는 0으로 채움)
-    counts_series = counts_raw.rename('count')
-    full_counts = counts_series.reindex(full_labels, fill_value=0)
-
+    # 월별 로직을 따르기 위해 full_counts를 counts_raw와 full_labels로 분리 (주별 로직은 이미 full_counts에 통합됨)
+    if frequency_type == 'monthly':
+        counts_series = counts_raw.rename('count')
+        full_counts = counts_series.reindex(full_labels, fill_value=0)
+    
     # 시각화 실행
     plt.figure(figsize=(15 if frequency_type == 'weekly' else 12, 6))
     sns.lineplot(
@@ -411,7 +417,13 @@ def visualize_post_frequency(df, frequency_type='monthly'):
     )
 
     plt.title(f'최근 {time_span} 언급량 추이 (현재 {time_unit[:-1]} 제외)', fontsize=16) 
-    plt.xlabel(f'언급 {time_unit}', fontsize=12) 
+    
+    # 주별/월별에 따라 x축 레이블 설정
+    if frequency_type == 'weekly':
+        plt.xlabel(f'언급 {time_unit} (주차 종료일)', fontsize=12) # 레이블 수정
+    else:
+        plt.xlabel(f'언급 {time_unit}', fontsize=12) 
+        
     plt.ylabel('총 언급량', fontsize=12)
 
     plt.xticks(full_counts.index, rotation=rotation_angle) 
@@ -426,7 +438,7 @@ def visualize_combined_trend(total_df, trend_df):
     print("\n--- 4단계 분석: 언급량 vs 검색량 통합 시각화 (최근 1년 월간 단위) ---")
     
     if trend_df.empty or 'date' not in trend_df.columns:
-        print("경고: 검색량(데이터랩) 데이터가 없거나 형식이 잘못되어 통합 분석을 건너뜕니다.")
+        print("경고: 검색량(데이터랩) 데이터가 없거나 형식이 잘못되어 통합 분석을 건너뜁니다.")
         return
         
     temp_df = total_df.copy()
@@ -509,13 +521,13 @@ def visualize_sentiment_word_clouds(df, positive_words, negative_words):
         )
         wordcloud = wc.generate_from_frequencies(counts)
         
-        plt.figure(figsize=(12, 7)) 
+        fig = plt.figure(figsize=(12, 7)) 
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis('off') 
         plt.title(title, fontsize=16)
         plt.tight_layout(pad=3.0) 
         
-        return plt
+        return fig
 
     pos_counts = get_word_counts(positive_words, cleaned_text, max_words=20)
     pos_plot = create_wordcloud_plot(pos_counts, '긍정 감성 키워드 태그 클라우드 (Top 20)', 'YlGn')
@@ -538,7 +550,7 @@ def visualize_competitor_mention_comparison(own_query, own_df, competitor_query,
     print(f"\n--- 9단계 분석: 자사({own_query}) vs 경쟁사({competitor_query}) 월별 언급량 비교 시각화 시작 ---")
 
     if own_df.empty and competitor_df.empty:
-        print("경고: 자사와 경쟁사 모두 유효한 데이터가 없어 비교 분석을 건너뜕니다.")
+        print("경고: 자사와 경쟁사 모두 유효한 데이터가 없어 비교 분석을 건너뜁니다.")
         return None
 
     def prepare_monthly_counts(df, label):
@@ -599,7 +611,7 @@ def find_outbreak_weeks(trend_df, change_threshold=0.5):
     print(f"\n--- 6단계 분석: 이슈 확산 월간 추출 시작 (전월 대비 {change_threshold * 100:.0f}% 초과 증가 기준) ---")
     
     if trend_df.empty or 'date' not in trend_df.columns:
-        print("-> ❌ 검색량(데이터랩) 데이터가 없어 확산 월간 분석을 건너뜕니다.")
+        print("-> ❌ 검색량(데이터랩) 데이터가 없어 확산 월간 분석을 건너뜁니다.")
         return []
 
     now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).replace(day=1)
@@ -607,7 +619,7 @@ def find_outbreak_weeks(trend_df, change_threshold=0.5):
     filtered_trend_df = filtered_trend_df.sort_values(by='date')
     
     if filtered_trend_df.empty:
-        print("-> ❌ 유효한 과거 월간 데이터가 없어 확산 월간 분석을 건너뜕니다.")
+        print("-> ❌ 유효한 과거 월간 데이터가 없어 확산 월간 분석을 건너뜁니다.")
         return []
 
     filtered_trend_df['ratio'] = pd.to_numeric(filtered_trend_df['ratio'], errors='coerce')
