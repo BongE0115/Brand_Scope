@@ -2,17 +2,17 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="globals.css" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/static/globals.css" />
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
 
   <body>
     <div class="box">
       <div class="rectangle">
         <div class="overlap">
-          <img class="university-element" src="../img/universitylogo.png" />
+          <img class="university-element" src="/static/img/universitylogo.png" />
         </div>
-        <form id="searchForm" action="/search" method="GET" class="search-form">
+        <form id="searchForm" form action="http://127.0.0.1:8000/search" method="GET" class="search-form">
           <input
             type="text"
             name="search"
@@ -21,7 +21,7 @@
           />
           <button type="submit" class="search-btn">
             <img
-              src="../img/magnifier.png"
+              src="../static/img/magnifier.png"
               alt="돋보기 아이콘"
               class="search-icon"
             />
@@ -32,33 +32,26 @@
 
     <div class="dashboard-container">
       <div class="card card-small">
-        <div class="circle place">
+        <div class="circle what">
           <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M42 20C42 34 24 46 24 46C24 46 6 34 6 20C6 15.2261 7.89642 10.6477 11.2721 7.27208C14.6477 3.89642 19.2261 2 24 2C28.7739 2 33.3523 3.89642 36.7279 7.27208C40.1036 10.6477 42 15.2261 42 20Z"
-              stroke="#BEA800"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M24 26C27.3137 26 30 23.3137 30 20C30 16.6863 27.3137 14 24 14C20.6863 14 18 16.6863 18 20C18 23.3137 20.6863 26 24 26Z"
-              stroke="#BEA800"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M44 24C44 35.0457 35.0457 44 24 44M44 24C44 12.9543 35.0457 4 24 4M44 24H36M24 44C12.9543 44 4 35.0457 4 24M24 44V36M4 24C4 12.9543 12.9543 4 24 4M4 24H12M24 4V12"
+                stroke="#D01993"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
         </div>
         <div class="littletitle">
-          <h4>최다 언급채널</h4>
-          <b id="chanel">어쩌구</b>
+          <h4>이슈 확산 포인트</h4>
+          <b id="truepoint">여기</b>
         </div>
       </div>
       <div class="card card-small">
@@ -134,33 +127,14 @@
             <button class="toggle-btn">월별</button>
           </div>
         </div>
+        {% if data %}
+        <img src="{{ data.visualization_urls.weekly_frequency }}" alt="언급량 추이 그래프" style="width: 100%; height: auto;">
+        {% else %}
         <div class="graph-placeholder">그래프</div>
+        {% endif %}
       </div>
 
       <div class="side-cards-container">
-        <div class="card card-side-first">
-          <div class="circle what">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M44 24C44 35.0457 35.0457 44 24 44M44 24C44 12.9543 35.0457 4 24 4M44 24H36M24 44C12.9543 44 4 35.0457 4 24M24 44V36M4 24C4 12.9543 12.9543 4 24 4M4 24H12M24 4V12"
-                stroke="#D01993"
-                stroke-width="4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="littletitle">
-            <h4>이슈확산 포인트</h4>
-            <b id="truepoint">여기</b>
-          </div>
-        </div>
         <div class="card card-side-second">
           <div class="card-title-container">
             <h2>검색어 관련 게시물</h2>
@@ -172,7 +146,7 @@
             <div class="sns1">
               <div class="title-wrapper">
                 <img
-                  src="../img/google_icon.png"
+                  src="/static/img/google_icon.png"
                   alt="구글 아이콘"
                   class="sns-icon"
                 />
@@ -278,7 +252,11 @@
             </div>
           </div>
           <div class="visualization-area">
+            {% if data %}
+            <img src="/static/img/sentiment_positive_wc.png" alt="통합 워드클라우드" style="width: 100%; height: auto;">
+            {% else %}
             <div class="graph-placeholder small">시각화 자료</div>
+            {% endif %}
           </div>
           <div class="keyword-ranking">
             <h2>긍정 / 부정 언급 단어 순위</h2>
@@ -298,13 +276,17 @@
       <div class="card card-graph3">
         <div class="card-title-container">
           <img
-            src="../img/cross_line.png"
+            src="/static//img/cross_line.png"
             alt="교차분석"
             class="cross-icon"
           />
           <h2>검색량-언급량 교차 분석</h2>
         </div>
+        {% if data %}
+        <img src="{{ data.visualization_urls.combined_trend }}" alt="교차 분석 그래프" style="width: 100%; height: auto;">
+        {% else %}
         <div class="graph-placeholder large">막대그래프</div>
+        {% endif %}
       </div>
       
 
@@ -347,36 +329,38 @@
           />
           <button type="submit" class="search-btn">
             <img
-              src="../img/magnifier.png"
+              src="/static/img/magnifier.png"
               alt="돋보기 아이콘"
               class="search-icon"
             />
           </button>
         </form>
         </div>
-        <div class="graph-placeholder large">그래프</div>
+        {% if data and data.visualization_urls.competitor_comparison %}
+        <img src="{{ data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 100%; height: auto;">
+        {% else %}
+        <div class="graph-placeholder large">경쟁사 데이터가 없거나 분석되지 않았습니다.</div>
+        {% endif %}
       </div>
     </div>
 
 <script>
+  {% if data %}
       // 스크립트존
 
       // 변경하고 싶은 값을 변수로 정의
       // 이 값은 서버에서 가져오거나 다른 로직을 통해 생성될 수 있습니다.
-      const newChanelValue = "YOUTUBE"; //최다 언급채절 (변수)
-      const newMostdateValue = "2025.09.22"; //최다 언급량 일자 (변수)
-      const newChangeValue = "0"; //증감률 (변수)
-      const newTruepointValue = "네이버 블로그(블로그이름B)"; //이슈 확산 포인트 (변수)
+      const newMostdateValue = "{{ data.most_frequent_date | tojson }}"; //최다 언급량 일자 (변수)
+      const newChangeValue = "{{ data.mention_change_rate | tojson }}"; //증감률 (변수)
+      const newTruepointValue = "{{ data.outbreak_weeks[0] | default('N/A', true) | tojson }}"; //이슈 확산 포인트 (변수)
       
       
       // ID를 사용하여 HTML 요소를 가져옵니다.
-      const chanelElement = document.getElementById('chanel');
       const mostdateElement = document.getElementById('mostdate');
       const changeElement = document.getElementById('change');
       const truepointElement = document.getElementById('truepoint');
 
       // 요소의 텍스트 내용을 새로운 값으로 변경합니다.
-      chanelElement.textContent = newChanelValue;
       mostdateElement.textContent = newMostdateValue;
       changeElement.textContent = newChangeValue;
       truepointElement.textContent = newTruepointValue;
@@ -384,7 +368,7 @@
 
 
 
-      const positivePercentage = 49;  //예시값 (변경될 값)
+      const positivePercentage = {{ data.positive_percentage | default(50, true) }}; 
 
       const customSlider = document.querySelector('.custom-slider');
       const positiveIcon = document.querySelector('.positive-icon');
@@ -416,7 +400,8 @@
         const arrowDown = document.getElementById('arrow-down');
 
         // #change 요소의 텍스트를 숫자로 변환합니다.
-        const changeValue = parseFloat(changeValueElement.textContent);
+        const changeValueText = changeValueElement.textContent; // 예: "+100% (신규)"
+        const changeValue = parseFloat(changeValueText.replace('%', '')); // 숫자만 추출
 
         // 값에 따라 SVG를 표시하거나 숨깁니다.
         if (changeValue > 0) {
@@ -436,27 +421,19 @@
             arrowDown.style.display = 'none';
         }
 
-        // 임시 데이터 (실제로는 API에서 받아올 데이터)
-        const allData = [
-            { title: '구글 블로그 제목 1', date: '2023.10.26', author: '작성자A', source: 'google' },
-            { title: '네이버 블로그 제목 1', date: '2023.10.25', author: '블로그이름B', source: 'naver' },
-            { title: '구글 블로그 제목 2', date: '2023.10.24', author: '작성자C', source: 'google' },
-            { title: '네이버 블로그 제목 2', date: '2023.10.23', author: '블로그이름D', source: 'naver' },
-            { title: '구글 블로그 제목 3', date: '2023.10.22', author: '작성자E', source: 'google' },
-            { title: '네이버 블로그 제목 3', date: '2023.10.21', author: '블로그이름F', source: 'naver' },
-            // 더 많은 데이터 추가...
-        ];
+        // API 데이터
+          const allData = {{ data.post_list | tojson }};
 
-        const totalElement = document.getElementById('total');
-        const container = document.getElementById('sns-list-container');
-        const scrollableElement = document.querySelector('.card-side-second');
+          const totalElement = document.getElementById('total');
+          const container = document.getElementById('sns-list-container');
+          const scrollableElement = document.querySelector('.card-side-second');
+          container.innerHTML = '';
 
         let itemsPerPage = 5;
         let loadedItems = 0;
         
         // SVG 아이콘 경로
-        const googleIconUrl = "../img/google_icon.png";
-        const naverIconUrl = "../img/naver.png";
+        const naverIconUrl = "/static/img/naver.png";
 
         // 총 결과 개수 업데이트
         totalElement.textContent = allData.length;
@@ -470,7 +447,7 @@
             titleWrapper.classList.add('title-wrapper');
 
             const icon = document.createElement('img');
-            icon.src = data.source === 'google' ? '../img/google_icon.png' : '../img/naver.png';
+            icon.src = data.source === 'google' ? '/static/img/google_icon.png' : '/static/img/naver.png';
             icon.alt = data.source === 'google' ? '구글 아이콘' : '네이버 아이콘';
             icon.classList.add('sns-icon');
 
@@ -523,6 +500,7 @@
 
 
       });
+      {% endif %}
     </script>
   </body>
 </html>
