@@ -1,8 +1,7 @@
 # app.py (Flask 서버)
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 import os
-from analysis_core import run_full_analysis 
-
+from analysis_core import run_full_analysis
 app = Flask(__name__, static_url_path='/static', static_folder='static',template_folder='templates')
 
 # ⚠️ [필수 수정] 여기에 실제 Naver API 정보를 입력하세요! ⚠️
@@ -131,6 +130,8 @@ def compare_competitor():
             STATIC_FOLDER
         )
         
+        print(f"DEBUG: competitor_comparison_url = {competitor_comparison_url}")
+        
         # competitor_data 저장 (비교 그래프 URL만 저장)
         competitor_data = {
             'query': competitor_query,
@@ -138,6 +139,8 @@ def compare_competitor():
                 'competitor_comparison': competitor_comparison_url
             }
         }
+        
+        print(f"DEBUG: competitor_data = {competitor_data}")
         
     except Exception as e:
         print(f"ERROR during competitor analysis: {e}")
@@ -155,7 +158,7 @@ def compare_competitor():
 
 # ----------------------------------------------------
 # 🚀 서버 실행
-# ----------------------------------------------------
+# --------
 if __name__ == '__main__':
     # ⚠️ [수정] 포트를 8000번으로 설정합니다.
     app.run(debug=True, port=8000)

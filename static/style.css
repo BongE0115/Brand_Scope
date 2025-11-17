@@ -192,6 +192,7 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column; /* 내부 요소(제목, 3-content) 세로 정렬 */
+  
   gap: 10px;
 }
 
@@ -399,6 +400,20 @@ body {
   gap: 10px;
 }
 
+/* 키워드 랭킹 목록 내부 스크롤 설정: 많은 항목이 있어도 카드가 늘어나지 않도록 고정 높이와 내부 스크롤을 적용합니다. */
+.keyword-ranking .ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 항목 사이 여백 */
+  max-height: 300px;
+  /* 필요에 따라 조정하세요 */
+  overflow-y: auto;
+  padding-right: 8px;
+  /* 스크롤바와 내용 사이 여백 */
+  margin: 0;
+  /* 기본 ol 여백 제거 */
+}
 .visualization-area h2,
 .keyword-ranking h2 {
   margin: 0;

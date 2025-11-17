@@ -52,7 +52,9 @@
         <div class="littletitle">
           <h4>이슈 확산 포인트</h4>
           <b id="truepoint">여기</b>
+          <h6 id="last-month">*일정수준 이상의 검색량 급증을 기준으로 판단</h6>
         </div>
+        
       </div>
       <div class="card card-small">
         <div class="circle calendar">
@@ -128,7 +130,7 @@
           </div>
         </div>
         {% if data %}
-        <img src="{{ data.visualization_urls.weekly_frequency }}" alt="언급량 추이 그래프" style="width: 100%; height: auto;">
+        <img id="frequency-graph" src="{{ data.visualization_urls.weekly_frequency }}" alt="언급량 추이 그래프" style="width: 100%; height: auto;">
         {% else %}
         <div class="graph-placeholder">그래프</div>
         {% endif %}
@@ -477,7 +479,7 @@
 
                 // '언급 횟수' 키를 사용하여 최댓값(maxCount)을 가져옵니다.
                 const maxCount = topKeywordsData[0]['언급 횟수']; 
-                const keywordsToDisplay = topKeywordsData.slice(0, 7); 
+                  const keywordsToDisplay = topKeywordsData.slice(0, 20); 
 
                 keywordsToDisplay.forEach((item, index) => {
                     const listItem = document.createElement('li');
@@ -657,7 +659,39 @@
 
         // 🚀 페이지 로드 시 초기 항목 로드
         loadMoreItems();
+
+        // --- 2E. 💡 언급량 추이 그래프 토글 버튼 (주별/월별) ---
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
+        const frequencyGraph = document.getElementById('frequency-graph');
+
+        if (toggleButtons && frequencyGraph) {
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const frequency = button.getAttribute('data-frequency');
+
+                    // 모든 버튼에서 'active' 클래스 제거
+                    toggleButtons.forEach(btn => btn.classList.remove('active'));
+
+                    // 클릭한 버튼에 'active' 클래스 추가
+                    button.classList.add('active');
+
+                    // 빈도에 따라 이미지 URL 변경
+                    if (frequency === 'weekly') {
+                        frequencyGraph.src = "{{ data.visualization_urls.weekly_frequency }}";
+                        frequencyGraph.alt = '주별 언급량 추이 그래프';
+                    } else if (frequency === 'monthly') {
+                        frequencyGraph.src = "{{ data.visualization_urls.monthly_frequency }}";
+                        frequencyGraph.alt = '월별 언급량 추이 그래프';
+                    }
+
+                    console.log(`언급량 추이 그래프 변경: ${frequency}`);
+                });
+            });
+        } else {
+            console.warn("토글 버튼 또는 그래프 요소를 찾을 수 없습니다.");
+        }
         });
+        
     </script>
     {% endif %}
   </body>

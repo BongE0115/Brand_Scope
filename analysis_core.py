@@ -71,17 +71,30 @@ MAX_RESULTS_PER_API = 1000
 
 # --- 순수 Python 감성 사전 정의 (Lexicon) ---
 POSITIVE_WORDS = [
-    '좋아요', '최고', '만족', '추천', '강력추천', '대박', '예쁘', '편안', '행복', '감사', 
-    '기쁨', '훌륭', '사랑', '재미', '즐거움', '성공', '합격', '선물', '따뜻', '밝은', 
-    '완벽', '인생템', '가성비', '착한', '놀랍', '기대', '보람', '깨끗', '싱그러', '프리미엄'
+    '좋아요', '최고', '만족', '추천', '강력추천', '대박', '예쁘', '예쁘다', '편안', '편안함',
+    '행복', '감사', '기쁨', '훌륭', '사랑', '재미', '즐거움', '성공', '합격', '선물',
+    '따뜻', '밝은', '완벽', '인생템', '가성비', '착한', '놀랍', '기대', '보람', '깨끗',
+    '싱그럽', '프리미엄', '친절', '신뢰', '편리', '안정성', '풍부', '효율적', '세련', '프렌들리',
+    '믿음', '가치', '만족감', '추천합니다', '짱', '최고예요', '좋네요', '감동', '재구매', '재구매의사',
+    '만족스러움', '고급', '퀄리티', '뛰어남', '만족스럽다', '훌륭해요', '믿을만', '편안해요', '사랑스러', '사랑스러움',
+    '편리함', '안정적', '풍성', '만족도', '효율성', '인기', '유용', '실용적', '강추', '강추합니다',
+    '추천해요', '감사해요', '기뻐요', '만족했다', '좋습니다', '최고임', '편안함이', '친절해요', '가성비좋', '경제적',
+    '만족도가', '만족했던', '깔끔', '깔끔함', '신속', '신속함', '정확', '정확함', '편안한', '포근',
+    '달콤', '시원', '풍미', '활력', '안정감', '만족스러운', '놀랍다', '기대이상', '추천받음', '기대만큼'
 ]
 
 NEGATIVE_WORDS = [
-    '별로', '실망', '아쉬움', '나쁘', '불만', '불편', '최악', '힘들', '걱정', '문제', 
+    '별로', '실망', '아쉬움', '나쁘', '불만', '불편', '최악', '힘들', '걱정', '문제',
     '어려움', '부족', '실패', '낭비', '쓰레기', '비싸', '떨어짐', '실망스럽', '지루', '후회',
-    '이상', '오류', '짜증', '고통', '논란', '부정적', '약점', '결함', '복잡', '불필요'
+    '이상', '오류', '짜증', '고통', '논란', '부정적', '약점', '결함', '복잡', '불필요',
+    '무성의', '불친절', '지저분', '과대광고', '오래걸림', '허접', '번거로움', '부정확', '비추천', '불신',
+    '불만족', '불만족스러움', '불쾌', '불만족하다', '불만족스럽다', '불안정', '질낮', '저급', '형편없', '엉망',
+    '망함', '실패작', '불편함', '성가심', '번거로워요', '못함', '부실', '불량', '손해', '불친절함',
+    '비추', '비추합니다', '무책임', '취약', '반품', '환불', '불만족했다', '부작용', '문제있', '불편했다',
+    '짜증나요', '사용불가', '먹먹', '불편한', '못쓰겠다', '고장', '터무니없', '불만족감', '불편함이', '불쾌감',
+    '불합리', '악화', '악성', '부정', '부적절', '실망스러웠다', '실망했다', '후회한다', '실망해요', '최악이다',
+    '최악이에요', '형편없다', '엉망진창', '엉성', '값비싼', '불친절했어요', '불편했습니다', '부정확함', '부주의', '문제가있다'
 ]
-
 # --- 폰트 설정 (통합 로직) ---
 # 1. 시스템에 설치된 한글 폰트 찾기
 def get_korean_font():
@@ -108,10 +121,10 @@ if korean_font_name:
     # 안정적인 사용자 환경을 가정하고 유지합니다.
     # font_manager.fontManager.addfont(korean_font_path)
     rc('font', family=korean_font_name)
-    print(f"-> ✅ 한글 폰트 '{korean_font_name}' 설정 완료.")
+    print(f"-> [OK] 한글 폰트 '{korean_font_name}' 설정 완료.")
     FONT_PATH = korean_font_path # 워드클라우드용 경로 설정
 else:
-    print("-> ⚠️ 한글 폰트를 찾을 수 없습니다. 기본 폰트로 실행합니다.")
+    print("[WARNING] 한글 폰트를 찾을 수 없습니다. 기본 폰트로 실행합니다.")
     FONT_PATH = None
     
 plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
@@ -316,13 +329,16 @@ def get_search_trend(query, client_id, client_secret):
 # --- 시각화 함수 (플롯 객체 생성) ---
 # ----------------------------------------------------
 
+# ⚠️ [수정] 이 함수 전체를 복사해서 기존 함수를 덮어쓰세요.
+
 def visualize_post_frequency(df, frequency_type='monthly'): 
     """ 단일 통합 데이터프레임을 받아 월별 또는 주별 언급량 추이를 시각화하고 플롯 객체를 반환합니다. """
     time_unit = "월별" if frequency_type == 'monthly' else "주별"
     time_span = "12개월" if frequency_type == 'monthly' else "6개월"
     color = 'darkorange' if frequency_type == 'monthly' else 'purple'
     
-    print(f"\n--- 3단계 분석: {time_unit} 언급량 시각화 ({time_span}) (현재 기간 제외) ---")
+    # ⚠️ [수정] 제목에서 "(현재 기간 제외)" 문구 삭제
+    print(f"\n--- 3단계 분석: {time_unit} 언급량 시각화 ({time_span}) ---")
     
     temp_df = df.copy()
     
@@ -339,25 +355,38 @@ def visualize_post_frequency(df, frequency_type='monthly'):
         
     now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # 🌟 이전에 생략 주석이 있던 부분 (이제 로직이 모두 포함되어 깔끔해졌습니다) 🌟
     if frequency_type == 'monthly':
-        current_month_start = now.replace(day=1)
-        # 현재 월보다 이전 데이터만 사용
-        df_filtered = temp_df[temp_df['postdate'] < current_month_start].copy()
+        
+        # ⚠️ [수정] 현재 월을 제외하는 필터를 제거하고, 모든 데이터를 사용합니다.
+        # df_filtered = temp_df[temp_df['postdate'] < current_month_start].copy() # <-- 기존 코드
+        df_filtered = temp_df.copy() # <-- 수정된 코드 (모든 데이터 사용)
+        
         start_date_offset = pd.DateOffset(months=12)
         freq_label = 'post_month'
         freq_unit = 'MS'
         
         if not df_filtered.empty:
-            # 최근 12개월 데이터만 필터링 (최신 날짜 기준으로 12개월)
+            # 최근 12개월 데이터만 필터링 (최신 날짜 기준)
             latest_date = df_filtered['postdate'].max()
-            df_filtered = df_filtered[df_filtered['postdate'] >= (latest_date - start_date_offset)].copy()
+            # [추가] 혹시 모를 미래 날짜 데이터 방지를 위해 now로 상한선 적용
+            latest_date_cap = min(latest_date, now)
+            
+            # 12개월 전 데이터만 필터링
+            df_filtered = df_filtered[
+                (df_filtered['postdate'] >= (latest_date_cap - start_date_offset)) &
+                (df_filtered['postdate'] <= latest_date_cap) # ⚠️ [추가] 현재 날짜 상한선
+            ].copy()
+            
             df_filtered[freq_label] = df_filtered['postdate'].dt.strftime('%Y-%m')
             counts_raw = df_filtered[freq_label].value_counts().sort_index()
             
+            if counts_raw.empty: # ⚠️ [추가] 필터링 후 비어있을 수 있음
+                 print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
+                 return None
+
             # 빈 월을 채우기 위한 전체 레이블 생성
-            start_month = counts_raw.index.min() if not counts_raw.empty else (now - start_date_offset).strftime('%Y-%m')
-            end_month = counts_raw.index.max() if not counts_raw.empty else (now - pd.DateOffset(months=1)).strftime('%Y-%m')
+            start_month = counts_raw.index.min()
+            end_month = counts_raw.index.max()
             
             full_index_range = pd.date_range(start=start_month, end=end_month, freq=freq_unit)
             full_labels = full_index_range.strftime('%Y-%m')
@@ -367,60 +396,60 @@ def visualize_post_frequency(df, frequency_type='monthly'):
             return None # None 반환으로 통일
 
     elif frequency_type == 'weekly':
-        # 현재 주차의 시작일 (월요일 시작으로 가정)
-        # 현재 주차 시작일 (월요일)
+        # (주별 분석 로직은 로그상 정상 작동했으므로 그대로 둡니다)
         current_week_start = (now - timedelta(days=now.weekday()))
         
-        # 현재 주보다 이전 데이터만 사용
         df_filtered = temp_df[temp_df['postdate'] < current_week_start].copy()
-        start_date_offset = pd.DateOffset(months=6) # 주별은 최근 6개월 기준
+        start_date_offset = pd.DateOffset(months=6) 
 
         if not df_filtered.empty:
-            # 최근 6개월 데이터만 필터링
             latest_date = df_filtered['postdate'].max()
             df_filtered = df_filtered[df_filtered['postdate'] >= (latest_date - start_date_offset)].copy()
             
-            # ** 🎯 핵심 수정: resample을 사용하여 주차별 카운트 및 빈 주차 채우기 **
-            
-            # postdate를 인덱스로 설정
+            if df_filtered.empty: # ⚠️ [추가] 필터링 후 비어있을 수 있음
+                print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
+                return None
+
             df_resample = df_filtered.set_index('postdate')
-            
-            # 'W'를 사용하여 주별로 재표본 추출 (기본적으로 일요일에 끝나는 주차로 카운트)
-            counts_resampled = df_resample.resample('W').size() # count.value_counts() 대신 size() 사용
+            counts_resampled = df_resample.resample('W').size() 
             
             full_counts = counts_resampled
             
-            # resample 결과 인덱스 (날짜 객체)를 'YYYY-MM-DD' 형식의 문자열 레이블로 변환
             full_counts.index = full_counts.index.strftime('%Y-%m-%d')
-            full_labels = full_counts.index.tolist() # 재색인 불필요
+            full_labels = full_counts.index.tolist() 
             rotation_angle = 90
         else:
             print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-            return None # None 반환으로 통일
+            return None 
     
     else:
         return None
 
-    if 'full_counts' not in locals() or full_counts.empty: # full_counts 변수 생성 확인 및 비어있는지 확인
+    # ⚠️ [수정] 'full_counts'가 정의되지 않았을 수 있으므로 locals() 체크 제거
+    # 'monthly'의 경우 full_counts가 여기서 정의되므로, counts_raw로 대신 체크
+    if frequency_type == 'monthly' and (not 'counts_raw' in locals() or counts_raw.empty): 
+        print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
+        return None
+    elif frequency_type == 'weekly' and (not 'full_counts' in locals() or full_counts.empty):
         print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
         return None
 
-    # 월별 로직을 따르기 위해 full_counts를 counts_raw와 full_labels로 분리 (주별 로직은 이미 full_counts에 통합됨)
     if frequency_type == 'monthly':
         counts_series = counts_raw.rename('count')
         full_counts = counts_series.reindex(full_labels, fill_value=0)
     
     # 시각화 실행
-    plt.figure(figsize=(15 if frequency_type == 'weekly' else 12, 6))
+    # ⚠️ [수정] fig 변수에 플롯 객체를 할당
+    fig = plt.figure(figsize=(15 if frequency_type == 'weekly' else 12, 6))
     sns.lineplot(
         x=full_counts.index, y=full_counts.values, marker='o', color=color
     )
 
-    plt.title(f'최근 {time_span} 언급량 추이 (현재 {time_unit[:-1]} 제외)', fontsize=16) 
+    # ⚠️ [수정] 제목에서 "(현재 ... 제외)" 문구 삭제
+    plt.title(f'최근 {time_span} 언급량 추이', fontsize=16) 
     
-    # 주별/월별에 따라 x축 레이블 설정
     if frequency_type == 'weekly':
-        plt.xlabel(f'언급 {time_unit} (주차 종료일)', fontsize=12) # 레이블 수정
+        plt.xlabel(f'언급 {time_unit} (주차 종료일)', fontsize=12) 
     else:
         plt.xlabel(f'언급 {time_unit}', fontsize=12) 
         
@@ -431,7 +460,9 @@ def visualize_post_frequency(df, frequency_type='monthly'):
     plt.tight_layout()
     
     print(f"-> 통합 데이터 {time_unit} 언급량 시각화 플롯 객체 생성 완료.")
-    return plt
+    
+    # ⚠️ [수정] fig 객체를 반환 (save_and_get_url 호환)
+    return fig
 
 def visualize_combined_trend(total_df, trend_df):
     """ 검색량(월간)과 언급량(월간)을 하나의 그래프에 시각화하고 플롯 객체를 반환합니다. """
@@ -539,8 +570,9 @@ def visualize_sentiment_word_clouds(df, positive_words, negative_words):
     all_counts_top20 = get_word_counts(ALL_SENTIMENT_WORDS, cleaned_text, max_words=20)
     all_plot = create_wordcloud_plot(all_counts_top20, '긍정+부정 통합 키워드 태그 클라우드 (Top 20)', 'plasma')
     
-    all_counts_top7 = {k: all_counts_top20[k] for k in list(all_counts_top20.keys())[:min(7, len(all_counts_top20))]}
-    all_df = pd.DataFrame(all_counts_top7.items(), columns=['키워드', '언급 횟수'])
+    # 상위 20개 키워드를 반환하도록 변경
+    all_counts_top20_selected = {k: all_counts_top20[k] for k in list(all_counts_top20.keys())[:min(20, len(all_counts_top20))]}
+    all_df = pd.DataFrame(all_counts_top20_selected.items(), columns=['키워드', '언급 횟수'])
     
     print("-> 감성 사전 기반 워드클라우드 플롯 객체 생성 및 상위 키워드 분석 완료.")
     return pos_plot, neg_plot, all_plot, all_df
@@ -641,12 +673,29 @@ def find_outbreak_weeks(trend_df, change_threshold=0.5):
     if not outbreak_months_df.empty:
         outbreak_months_df = outbreak_months_df.sort_values(by='ratio', ascending=False)
         for _, row in outbreak_months_df.iterrows():
-            month_start = row['date'].strftime('%Y-%m')
+            date_obj = row['date']
+            year = date_obj.year
+            month = date_obj.month
+            
+            # 월의 첫 날을 기준으로 주차 계산 (ISO 주차 사용)
+            # ISO 주차: 월요일을 주의 시작으로 함
+            iso_calendar = date_obj.isocalendar()
+            week_of_year = iso_calendar[1]  # ISO 주차 (1~53)
+            
+            # 더 직관적인 월별 주차 계산: 월의 첫 날부터의 주차
+            # (0-based index에서 +1 하여 1~5 범위)
+            first_day_of_month = date_obj.replace(day=1)
+            days_since_month_start = (date_obj - first_day_of_month).days
+            week_of_month = (days_since_month_start // 7) + 1
+            
             current_ratio = row['ratio']
             prev_ratio = row['prev_ratio']
             
             rate_str = f"{row['change_rate'] * 100:.1f}% 증가" if row['prev_ratio'] > 0 else "신규 발생 (전월 0)"
-            outbreak_results.append(f"{month_start} (현재 비율: {current_ratio:.1f}, 전월: {prev_ratio:.1f}, {rate_str})")
+            
+            # 년/월/주차 형식으로 포맷팅
+            date_with_week = f"{year}-{month:02d}/{week_of_month}주차"
+            outbreak_results.append(f"{date_with_week} (현재 비율: {current_ratio:.1f}, 전월: {prev_ratio:.1f}, {rate_str})")
             
         print(f"-> ✅ 총 {len(outbreak_results)}개의 검색량 급증 월간을 찾았습니다.")
         
