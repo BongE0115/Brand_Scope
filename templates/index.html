@@ -15,9 +15,9 @@
         <form id="searchForm" form action="http://127.0.0.1:8000/search" method="GET" class="search-form">
           <input
             type="text"
-            name="search"
+            name="main-search"
             placeholder="브랜드를 입력하세요"
-            class="search-input"
+            class="search-input-first"
           />
           <button type="submit" class="search-btn">
             <img
@@ -286,25 +286,28 @@
 
       <div class="card card-graph2">
         <div class="graph2-title">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M33 7.00003C33.7956 6.20438 34.8748 5.75739 36 5.75739C36.5572 5.75739 37.1088 5.86712 37.6236 6.08034C38.1383 6.29355 38.606 6.60606 39 7.00003C39.394 7.39399 39.7065 7.8617 39.9197 8.37644C40.1329 8.89118 40.2426 9.44287 40.2426 10C40.2426 10.5572 40.1329 11.1089 39.9197 11.6236C39.7065 12.1384 39.394 12.6061 39 13L14 38L6 40L8 32L33 7.00003Z"
-              stroke="#1E1E1E"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M33 7.00003C33.7956 6.20438 34.8748 5.75739 36 5.75739C36.5572 5.75739 37.1088 5.86712 37.6236 6.08034C38.1383 6.29355 38.606 6.60606 39 7.00003C39.394 7.39399 39.7065 7.8617 39.9197 8.37644C40.1329 8.89118 40.2426 9.44287 40.2426 10C40.2426 10.5572 40.1329 11.1089 39.9197 11.6236C39.7065 12.1384 39.394 12.6061 39 13L14 38L6 40L8 32L33 7.00003Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <div>
+            <h2>AI 인사이트 리포트</h2>
+          </div>
           </svg>
-          <h2>AI분석 리포트</h2>
+          
         </div>
+        
         <div class="report-content">
-          <p>AI 리포트 텍스트가 이곳에 표시됩니다...</p>
+          <div class="report-scroll-box">
+            <div class="markdown-body">
+              <style>
+                  .markdown-body h3, .markdown-body h4 { margin-top: 20px; margin-bottom: 10px; color: #2c3e50; }
+                  .markdown-body strong { color: #d35400; background-color: #fff3cd; padding: 0 4px; border-radius: 4px; }
+                  .markdown-body ul { padding-left: 20px; margin-bottom: 15px; }
+                  .markdown-body li { margin-bottom: 5px; }
+                  .markdown-body hr { border: 0; height: 1px; background: #ddd; margin: 20px 0; }
+              </style>
+                {{ data.ai_report | default('AI 리포트를 불러오는 중 오류가 발생했거나 데이터가 부족합니다.', true) | safe }}
+                </div>
+            </div>
         </div>
       </div>
 
@@ -317,7 +320,7 @@
           <form id="competitorForm" action="/compare_competitor" method="GET" class="search-form">
           <input
             type="text"
-            name="search"
+            name="competitor-search"
             placeholder="비교하고 싶은 경쟁사를 입력하세요"
             class="search-input"
           />
@@ -342,6 +345,83 @@
 
     {% if data %}
     <script>
+    const competitorForm = document.getElementById('competitorForm');
+    const searchInputMain = document.querySelector('.search-input-first'); // main-search 입력 필드
+    const searchInputCompetitor = document.querySelector('.search-input');  // competitor-search 입력 필드
+    
+    // --- 🚀 두 번째 폼 제출 핸들러 (Hidden Field 없이 값 유지) ---
+    if (competitorForm && searchInputMain && searchInputCompetitor) {
+        
+        competitorForm.addEventListener('submit', (event) => {
+            
+            event.preventDefault(); // 👈 폼의 기본 제출 동작(새로고침)을 막습니다.
+            
+            const mainQuery = searchInputMain.value;
+            const competitorQuery = searchInputCompetitor.value;
+            
+            // 폼의 action URL을 가져옵니다.
+            const actionUrl = competitorForm.getAttribute('action'); // 예: /compare_competitor
+            
+            // URL 파라미터를 구성합니다.
+            const params = new URLSearchParams();
+            
+            // 1. **현재 폼의 값** (경쟁사 검색어)을 추가합니다.
+            if (competitorQuery) {
+                // 이 값은 폼의 input name="competitor-search"에서 가져왔습니다.
+                params.set('competitor-search', competitorQuery);
+            }
+            
+            // 2. **유지할 값** (메인 검색어)을 추가합니다.
+            if (mainQuery) {
+                // 첫 번째 입력 필드의 값을 강제로 URL 파라미터로 추가합니다.
+                params.set('main-search', mainQuery); 
+            }
+            
+            // 3. 구성된 파라미터로 페이지를 이동시킵니다.
+            const newUrl = `${actionUrl}?${params.toString()}`;
+            window.location.href = newUrl; 
+        });
+    }
+
+    // --- 🚀 (선택 사항) 첫 번째 폼에도 동일한 로직 적용 ---
+    // 만약 첫 번째 폼 제출 시에도 두 번째 검색어 값을 유지하고 싶다면,
+    const searchForm = document.getElementById('searchForm');
+    
+    if (searchForm && searchInputMain && searchInputCompetitor) {
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault(); 
+            
+            const mainQuery = searchInputMain.value;
+            const competitorQuery = searchInputCompetitor.value;
+
+            const actionUrl = searchForm.getAttribute('action'); // 예: http://127.0.0.1:8000/search
+
+            const params = new URLSearchParams();
+            if (mainQuery) {
+                params.set('main-search', mainQuery);
+            }
+            if (competitorQuery) {
+                params.set('competitor-search', competitorQuery); 
+            }
+
+            const newUrl = `${actionUrl}?${params.toString()}`;
+            window.location.href = newUrl;
+        });
+    }
+    
+    // --- 4. 페이지 로드 시 URL 파라미터를 읽어 값 채우기 (기존 로직) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const mainQueryFromUrl = urlParams.get('main-search'); 
+    const competitorQueryFromUrl = urlParams.get('competitor-search'); 
+
+    if (searchInputMain && mainQueryFromUrl) {
+        searchInputMain.value = mainQueryFromUrl;
+    }
+    
+    if (searchInputCompetitor && competitorQueryFromUrl) {
+        searchInputCompetitor.value = competitorQueryFromUrl;
+    }
+
         // ----------------------------------------------------
         // 1. Jinja 변수로부터 초기 데이터를 설정합니다. (DOMContentLoaded 외부: 안정)
         // ----------------------------------------------------

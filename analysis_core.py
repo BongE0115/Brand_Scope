@@ -9,6 +9,9 @@ import gc
 import matplotlib.pyplot as plt 
 import matplotlib
 import requests.utils
+import threading
+import time
+import markdown
 
 # ⚠️ [추가] Flask 연동 및 데이터 처리를 위해 필수적인 라이브러리 추가
 import io 
@@ -633,6 +636,110 @@ def visualize_competitor_mention_comparison(own_query, own_df, competitor_query,
     print("-> 자사/경쟁사 언급량 비교 시각화 플롯 객체 생성 완료.")
     return plt
 
+def generate_smart_report(query, total_mentions, sentiment_label, positive_score, top_keywords, outbreak_weeks, trend_available, most_frequent_date, mention_change_rate, api_key):
+    """
+    Gemini API 호출 중 5초마다 진행 상황을 알려줍니다.
+    모든 분석 지표(6가지 핵심 요소)를 종합하여 심층 리포트를 생성합니다.
+    """
+    
+    # 1. 데이터 전처리 및 텍스트화
+    keywords_str = ", ".join([k['키워드'] for k in top_keywords[:5]]) if top_keywords else "데이터 부족"
+    
+    # 이슈 확산 포인트 텍스트화
+    outbreak_text = "특이한 급증 구간 없음"
+    if outbreak_weeks:
+        outbreak_text = f"{outbreak_weeks[0]} (검색량 급증 감지)"
+
+    # 2. 강력해진 프롬프트 구성 (6가지 요소 반영)
+    prompt = f"""
+    당신은 수석 데이터 분석가입니다. 아래 제공된 [종합 분석 데이터]를 바탕으로 '{query}' 브랜드에 대한 심층 인사이트 보고서를 작성하세요.
+
+    📊 [종합 분석 데이터]
+    1. 이슈 확산 포인트 (Outbreak): {outbreak_text}
+    2. 최다 언급량 일자 (Peak Date): {most_frequent_date}
+    3. 언급량 증감률 (Growth Rate): {mention_change_rate} (최근 30일 기준)
+    4. 브랜드 감성 분석 (Sentiment): {sentiment_label} (긍정 {positive_score}%, 부정/중립 {100 - positive_score}%)
+    5. 트렌드 언급 단어 (Keywords): {keywords_str}
+    6. 총 언급량 (Total Volume): {total_mentions}건
+
+    📝 [작성 가이드]
+    위 6가지 데이터를 유기적으로 연결하여 500자 내외로 작성하되, 다음 4가지 섹션을 반드시 포함하세요.
+    배경 지식이나 외부 정보는 절대 사용하지 마세요.
+
+    1. 📈 [검색량-언급량 교차 분석]
+       - '이슈 확산 포인트'와 '언급량 증감률', '최다 언급일'의 관계를 분석하세요.
+       - 예: 검색량이 급증하면서 실제 언급량도 폭발적으로 늘었는지, 아니면 검색만 늘고 언급은 없는지 진단.
+
+    2. 🗣️ [여론 및 감성 진단]
+       - 긍정 비율({positive_score}%)과 '{sentiment_label}' 판정을 기반으로 소비자의 신뢰도를 평가하세요.
+       - 긍정이 높다면 브랜드 파워를, 낮다면 리스크 요인을 구체적으로 언급하세요.
+
+    3. 🔑 [트렌드 키워드 맥락 분석]
+       - 도출된 상위 키워드({keywords_str})들이 왜 나왔는지, 감성/언급량 데이터와 연결 지어 해석하세요.
+
+    4. 💡 [전문가 전략 제언]
+       - 위 분석을 종합하여 마케팅 또는 리스크 관리 차원의 구체적인 행동 전략을 한 줄로 제안하세요.
+    """
+
+    # 3. Gemini API 호출 (스레드 알림 기능 포함)
+    print("\n--- 🧠 Gemini 2.5 AI 심층 리포트 요청 시작... ---")
+    
+    if api_key:
+        # 5초 알림 스레드 함수
+        def print_loading_status(stop_event):
+            elapsed = 0
+            while not stop_event.is_set():
+                time.sleep(5)
+                elapsed += 5
+                if not stop_event.is_set():
+                    print(f"   ... {elapsed}초 경과: AI가 6가지 지표를 교차 분석 중입니다 📊")
+
+        stop_loading = threading.Event()
+        loader_thread = threading.Thread(target=print_loading_status, args=(stop_loading,))
+        loader_thread.daemon = True 
+
+        try:
+            loader_thread.start()
+            
+            # 모델명: 2.5-pro (안되면 1.5-pro 사용)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
+            
+            headers = {'Content-Type': 'application/json'}
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            
+            response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
+            
+            stop_loading.set()
+            loader_thread.join() 
+            
+            if response.status_code == 200:
+                result = response.json()
+                try:
+                    ai_text = result['candidates'][0]['content']['parts'][0]['text']
+                    print("-> ✅ AI 심층 리포트 생성 성공!")
+                    return markdown.markdown(ai_text)
+                except (KeyError, IndexError):
+                    print(f"-> ⚠️ 응답 형식 오류: {result}")
+            else:
+                print(f"-> ⚠️ AI 요청 실패 (상태 코드: {response.status_code})")
+                if response.status_code == 404:
+                     print("-> 힌트: 'gemini-2.5-pro' 모델을 찾을 수 없습니다. URL을 'gemini-1.5-pro'로 변경해 보세요.")
+                
+        except Exception as e:
+            stop_loading.set()
+            print(f"-> ⚠️ AI 연결 오류: {e}")
+    else:
+        print("-> ⚠️ API 키가 없습니다.")
+
+    # 4. [안전장치] 실패 시 규칙 기반 리포트 (Fallback)
+    print("-> 🔄 규칙 기반 리포트로 대체합니다.")
+    
+    fallback_report = f"📈 [교차 분석]: '{query}'의 언급량은 총 {total_mentions}건이며, 최근 증감률은 {mention_change_rate}입니다. 최다 언급일은 {most_frequent_date}입니다.\n\n"
+    fallback_report += f"🗣️ [여론]: 긍정 비율 {positive_score}%로 '{sentiment_label}' 성향을 보입니다.\n\n"
+    fallback_report += f"🔑 [키워드]: 주요 트렌드 단어는 '{keywords_str}' 입니다.\n\n"
+    fallback_report += "💡 [제언]: 상세 데이터 확인 후 마케팅 전략 수립이 필요합니다."
+    
+    return markdown.markdown(fallback_report)
 
 # ----------------------------------------------------
 # --- 핵심 분석 함수 (지표 계산 및 감성 분석) ---
@@ -925,8 +1032,23 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
         'channel_name': 'author'
     }).to_dict('records')
 
-    # AI 리포트
-    analysis_results["ai_report"] = "AI 리포트 내용을 준비 중입니다. 잠시 후 확인해 주세요." 
+    # ⚠️ [설정] 여기에 Gemini API 키를 직접 입력하세요 (따옴표 안에)
+    MY_GEMINI_KEY = "AIzaSyD7SMWEdC-6jA2C1pZvVAGeyROLVNitcYI"
+
+    # AI 리포트 생성 호출
+    analysis_results["ai_report"] = generate_smart_report(
+        query=search_query,
+        total_mentions=len(total_df),
+        sentiment_label=final_sentiment,
+        positive_score=int(float(f"{positive_score:.2f}")),
+        top_keywords=top7_keywords_df.to_dict('records') if not top7_keywords_df.empty else [],
+        outbreak_weeks=initial_outbreak_months,
+        trend_available=not trend_df.empty,
+        most_frequent_date=most_frequent_date_result,
+        mention_change_rate=mention_change_rate_result,
+        
+        api_key=MY_GEMINI_KEY
+    )
 
     print("\n==================================================")
     print("✅ 최종 분석 결과 JSON 생성 완료. Flask 응답 준비.")

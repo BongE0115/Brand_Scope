@@ -8,7 +8,7 @@ app = Flask(__name__, static_url_path='/static', static_folder='static',template
 # analysis_core.py의 run_full_analysis 함수가 이 정보를 필요로 합니다.
 NAVER_CLIENT_ID = "BKnRrHgb5IJH3rJmqvhm" 
 NAVER_CLIENT_SECRET = "BTnWjOC2uB"
-MAX_RESULTS = 1000 # 한 종류의 소스(블로그/뉴스)당 최대 수집 개수
+MAX_RESULTS = 10000 # 한 종류의 소스(블로그/뉴스)당 최대 수집 개수
 
 # 임시로 그래프 이미지를 저장할 디렉토리 생성
 STATIC_FOLDER = os.path.join(os.getcwd(), 'static')
@@ -37,7 +37,7 @@ def search_analysis():
     global current_data, competitor_data
     
     # HTML 폼에서 'name="search"'로 전달되는 값을 받습니다.
-    search_query = request.args.get('search', '').strip() 
+    search_query = request.args.get('main-search', '').strip() 
     competitor_query = "" # 현재 폼에는 없으므로 빈 문자열로 처리
 
     if not search_query:
@@ -89,7 +89,7 @@ def compare_competitor():
     global current_data, competitor_data
     
     # 경쟁사 검색어 받기
-    competitor_query = request.args.get('search', '').strip()
+    competitor_query = request.args.get('competitor-search', '').strip()
     
     if not competitor_query or current_data is None:
         # 경쟁사 검색어가 없거나 기존 분석 결과가 없으면 현재 상태 유지
