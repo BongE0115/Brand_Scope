@@ -1,0 +1,550 @@
+body {
+  background-color: #f0f0f0; /* 밝은 회색으로 설정 */
+}
+
+/* 상단 바와 그 내용을 감싸는 부모 컨테이너 */
+.rectangle {
+  display: flex; /* 자식 요소들을 가로로 정렬 */
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 20px; /* 로고와 검색 폼 사이 간격 */
+
+  /* 고정된 위치를 유지하지만, 내부 요소 정렬을 위해 flexbox 사용 */
+  position: fixed;
+  width: 100%; /* 너비를 100%로 설정하여 화면에 꽉 차게 */
+  height: 80px;
+  top: 0;
+  left: 0;
+  background-color: #7bb5e5;
+  padding: 0 24px; /* 좌우 패딩을 추가하여 내용이 가장자리에 붙지 않도록 */
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+  z-index: 1000; /* 다른 요소 위에 표시되도록 z-index 부여 */
+  border-bottom: 1px solid #e0e0e0; /* 시안의 얇은 하단선 추가 */
+  justify-content: center;
+}
+
+/* 로고 이미지 스타일 */
+.university-element {
+  width: 50px;
+  height: 50px;
+}
+
+/* 검색 폼 컨테이너 */
+.search-form {
+  position: relative;
+  width: 600px;
+}
+
+/* 검색 입력창 스타일 */
+.search-input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: #f7f7f7; /* 시안에 맞춰 약간 어둡게 */
+  border: none; /* 테두리 제거 */
+}
+
+/* 검색 버튼 스타일 */
+.search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.search-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.box {
+  /* 상단바가 fixed이므로, 이 box는 높이 80px을 확보해줘야 함 */
+  height: 80px;
+  width: 100%;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(110px, auto); /* 기본 행 높이 설정 */
+  gap: 20px;
+  padding: 20px 5%;
+  margin-top: 0; /* .box가 공간을 차지하므로 margin-top 제거 */
+}
+
+/* 모든 카드에 적용되는 공통 스타일 */
+.card {
+  background-color: white;
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  gap: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 은은한 그림자 추가 */
+}
+
+/* 첫 번째 행의 세 개의 작은 카드 */
+.card-small {
+  grid-row: 1;
+  height: 130px;
+  padding: 24px;
+  position: relative;
+  align-items: center; /* 세로 중앙 정렬 */
+}
+
+#last-month {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* 첫 번째 행의 넓은 카드 (언급량 추이) */
+.card-wide {
+  grid-column: span 2;
+  grid-row: 2;
+  min-height: 350px;
+  flex-direction: column; /* 내부 요소 세로 정렬 */
+}
+
+/* 넓은 카드 옆에 위치한 두 개의 작은 카드 컨테이너 */
+.side-cards-container {
+  grid-column: 3 / 4; /* 2행 3열에 고정 */
+  grid-row: 2; /* 2행에 고정 */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 넓은 카드 옆의 첫 번째(작은) 카드 (이슈 확산) */
+.card-side-first {
+  height: 120px;
+  align-items: center; /* 세로 중앙 정렬 */
+}
+
+/* 넓은 카드 옆의 두 번째(큰) 카드 (관련 게시물) */
+.card-side-second {
+  flex-grow: 1; /* 남는 공간 차지 */
+  min-height: 250px;
+  flex-direction: column; /* 내부 요소 세로 정렬 */
+  overflow-y: auto; /* 스크롤 활성화 */
+  height: 400px; /* 높이 고정 (스크롤을 위해) */
+}
+
+/* 동그라미 스타일 */
+.circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0; /* 크기 고정 */
+}
+
+.place {
+  background-color: #fff5ad;
+}
+.calendar {
+  background-color: #d5ebff;
+}
+.updown {
+  background-color: #ffcf8d;
+}
+.what {
+  background-color: #ffd5f0;
+}
+
+.littletitle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.littletitle h4 {
+  margin: 0;
+  font-weight: 600;
+  color: #555;
+}
+.littletitle b {
+  font-size: 1.25rem;
+  color: #111;
+}
+
+#arrow-up,
+#arrow-down {
+  display: none; /* JS로 제어 */
+}
+
+/* 3행: 감성분석, 시각화, 키워드 순위 */
+.card-graph {
+  grid-column: span 3;
+  grid-row: 3;
+  width: auto;
+  min-height: 400px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column; /* 내부 요소(제목, 3-content) 세로 정렬 */
+  gap: 10px;
+}
+
+/* 4행 (좌): 검색량-언급량 교차분석 */
+.card-graph3 {
+  grid-column: 1 / 3; /* 4행 1~2열 */
+  grid-row: 4;
+  width: auto;
+  min-height: 500px;
+  position: relative;
+  flex-direction: column; /* 내부 요소 세로 정렬 */
+}
+
+/* 4행 (우): AI 리포트 */
+.card-graph2 {
+  grid-column: 3 / 4; /* 4행 3열 */
+  grid-row: 4;
+  width: auto;
+  min-height: 500px;
+  position: relative;
+  flex-direction: column; /* 내부 요소 세로 정렬 */
+}
+
+/* 5행: 연관어 비교 (신규) */
+.card-graph4 {
+  grid-column: span 3;
+  grid-row: 5;
+  width: auto;
+  min-height: 400px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 카드 공통 제목 스타일 */
+.card-title-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+.card-title-container h2 {
+  font-weight: bold;
+  font-size: 20px;
+  margin: 0;
+}
+
+/* 경쟁사 비교 카드 스타일 */
+.competitor-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 그래프 제목 (AI, 교차분석) */
+.graph2-title,
+.graph3-title {
+  position: absolute;
+  top: 20px; /* padding과 일치 */
+  left: 20px; /* padding과 일치 */
+  display: flex;
+  align-items: center;
+}
+
+.graph2-title h2,
+.graph3-title h2,
+.third.header h2 {
+  margin-left: 10px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.cross-icon {
+  width: 50px;
+  height: 50px;
+}
+
+.third.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- 감성분석 영역 --- */
+
+.three-content {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  justify-content: center;
+  align-items: stretch; /* 자식 요소들이 높이를 꽉 채우도록 */
+  gap: 20px; /* 3개 섹션 사이 간격 */
+  flex-grow: 1; /* 부모(.card-graph)의 남은 공간 차지 */
+}
+
+.three-content > div {
+  position: relative;
+  padding: 15px;
+}
+
+/* 3-1: 감성 분석 섹션 */
+.sentiment-section {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sentiment-analysis {
+  border: 2px solid #b8b7b7ff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 15px;
+  height: 100%;
+  width: 100%;
+  min-height: 250px; /* 최소 높이 */
+}
+
+.analysis-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 83%;
+  gap: 15px; /* 간격 조정 */
+}
+
+.label {
+  font-weight: 600; /* 텍스트 굵게 */
+  font-size: 1.1rem; /* 폰트 크기 */
+  color: #333;
+}
+.percent-label {
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-top: -10px;
+}
+
+/* 긍정/부정 아이콘 */
+.thumbs-updown {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.thumbs-updown svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none; /* JS로 제어 */
+}
+
+/* 커스텀 슬라이더 */
+.custom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  outline: none;
+  background: linear-gradient(
+    to right,
+    #ee9090ff 15%,
+    #d3e061ff 50%,
+    #a0ff7aff 60%,
+    #47a6ffff 100%
+  );
+}
+
+.custom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #ffffffff;
+  border: 2px solid #817c7cff;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* 3-2: 시각화 자료 */
+.visualization-area {
+  flex: 3;
+  width: 100%;
+  height: auto; /* 100% 대신 auto */
+  border-left: 2px solid #ccc;
+  border-right: 2px solid #ccc;
+  display: flex; /* 내부 placeholder 중앙 정렬용 */
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 3-3: 키워드 랭킹 */
+.keyword-ranking {
+  flex: 2;
+  width: 100%;
+  height: auto; /* 100% 대신 auto */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.visualization-area h2,
+.keyword-ranking h2 {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+/* --- 그래프/데이터 자리 표시자 (Placeholder) --- */
+.graph-placeholder {
+  width: 100%;
+  flex-grow: 1; /* 남은 공간 모두 차지 */
+  min-height: 250px; /* 최소 높이 */
+  background-color: #f0f0f0; /* 시안의 회색 */
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #aaa;
+  font-weight: bold;
+}
+.graph-placeholder.small {
+  min-height: 200px; /* 시각화 자료는 조금 작게 */
+}
+.graph-placeholder.large {
+  min-height: 400px; /* 교차분석, 연관어는 크게 */
+}
+
+/* 키워드 랭킹 리스트 스타일 */
+.ranking-list {
+  /*list-style-type: decimal;*/ /* 1. 2. 3. 숫자 표시 */
+  padding-left: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* 항목 간 간격 */
+  margin: 0;
+}
+.ranking-list li {
+  list-style-type: decimal; /* 1. 2. 3. 숫자 표시 */
+  color: #333;
+  font-weight: 500;
+}
+.ranking-bar {
+  width: 100%;
+  height: 25px; /* 시안의 바 높이 */
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  margin-top: 2px;
+  padding: 3px;
+}
+
+/* --- AI 리포트 --- */
+.report-content {
+  padding-top: 60px; /* 제목 높이만큼 여유 */
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* --- 언급량 추이 그래프 (토글 버튼) --- */
+.toggle-buttons {
+  margin-left: auto; /* 오른쪽 끝으로 밀기 */
+}
+.toggle-btn {
+  padding: 5px 15px;
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+}
+.toggle-btn:first-child {
+  border-radius: 5px 0 0 5px;
+  border-right: none;
+}
+.toggle-btn:last-child {
+  border-radius: 0 5px 5px 0;
+}
+.toggle-btn.active {
+  background-color: #7bb5e5; /* 기존 상단바 색상 활용 */
+  color: white;
+  border-color: #7bb5e5;
+}
+
+
+
+/* 관련 게시물 리스트 (기존 스타일 유지) */
+.card-side-second::-webkit-scrollbar {
+  display: none;
+}
+/* SNS div들에 각각 다른 색상과 스타일 적용 */
+.sns1,
+.sns2 {
+  height: 50px;
+  width: 100%;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  color: #3f3f3fff;
+  font-weight: bold;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+.more {
+  height: 30px;
+  width: 100%;
+  border-radius: 15px; /* 모서리를 둥글게 */
+  background-color: #c9c9c9ff;
+  display: flex;
+  justify-content: center; /* 가로(수평) 중앙 정렬 */
+  align-items: center; /* 세로(수직) 중앙 정렬 */
+  color: #3f3f3fff;
+  font-weight: bold; /* 글자를 굵게 만듭니다 */
+}
+
+.sns1 {
+  background-color: #e5f1ff; /* 첫 번째 div 색상 */
+}
+
+.sns2 {
+  background-color: #e0fdde; /* 두 번째 div 색상 */
+}
+
+
+
+/* (선택 사항) h2 요소와 첫 번째 SNS div 사이의 간격 */
+.card-side-second h2 {
+  margin-bottom: 5px;
+  display: flex; /* Flexbox 활성화 */
+  align-items: baseline; /* 텍스트 기준선에 맞춰 정렬 */
+  gap: 5px; /* h2 텍스트와 p 태그 사이 간격 추가 */
+  font-weight: bold; /* 글자를 굵게 만듭니다 */
+}
+
+.sns-icon {
+  width: 24px; /* 아이콘의 너비 */
+  height: 24px; /* 아이콘의 높이 */
+  margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
+}
+  
+.title-wrapper {
+  display:flex;
+  padding: 3px;
+}

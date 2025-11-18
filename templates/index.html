@@ -1,9 +1,664 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>{{ title }}</title>
-    </head>
-    <body>
-        <h1>Welcome to Brand Scope</h1>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/static/globals.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body>
+    <div class="box">
+      <div class="rectangle">
+        <div class="overlap">
+          <img class="university-element" src="/static/img/universitylogo.png" />
+        </div>
+        <form id="searchForm" form action="http://127.0.0.1:8000/search" method="GET" class="search-form">
+          <input
+            type="text"
+            name="search"
+            placeholder="브랜드를 입력하세요"
+            class="search-input"
+          />
+          <button type="submit" class="search-btn">
+            <img
+              src="../static/img/magnifier.png"
+              alt="돋보기 아이콘"
+              class="search-icon"
+            />
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="dashboard-container">
+      <div class="card card-small">
+        <div class="circle what">
+          <svg
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M44 24C44 35.0457 35.0457 44 24 44M44 24C44 12.9543 35.0457 4 24 4M44 24H36M24 44C12.9543 44 4 35.0457 4 24M24 44V36M4 24C4 12.9543 12.9543 4 24 4M4 24H12M24 4V12"
+                stroke="#D01993"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+        </div>
+        <div class="littletitle">
+          <h4>이슈 확산 포인트</h4>
+          <b id="truepoint">여기</b>
+        </div>
+      </div>
+      <div class="card card-small">
+        <div class="circle calendar">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M32 4V12M16 4V12M6 20H42M10 8H38C40.2091 8 42 9.79086 42 12V40C42 42.2091 40.2091 44 38 44H10C7.79086 44 6 42.2091 6 40V12C6 9.79086 7.79086 8 10 8Z"
+              stroke="#251EF3"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="littletitle">
+          <h4>최다 언급량 일자</h4>
+          <b id="mostdate">언제</b>
+        </div>
+      </div>
+      <div class="card card-small">
+        <div class="circle updown">
+          <svg
+            id="arrow-down"
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M46 36L27 17L17 27L2 12M46 36H34M46 36V24"
+              stroke="#9C5C04"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <svg
+            id="arrow-up"
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M46 12L27 31L17 21L2 36M46 12H34M46 12V24"
+              stroke="#9C5C04"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="littletitle">
+          <h4>언급량 증감률</h4>
+          <b id="change">저쩌구</b>
+        </div>
+        <h6 id="last-month">*지난 30일 대비</h6>
+      </div>
+
+      <div class="card card-wide">
+        <div class="card-title-container">
+          <h2>언급량 추이 그래프</h2>
+          <div class="toggle-buttons">
+            <button class="toggle-btn active" data-frequency="weekly">주별</button>
+            <button class="toggle-btn" data-frequency="monthly">월별</button>
+          </div>
+        </div>
+        {% if data %}
+        <img src="{{ data.visualization_urls.weekly_frequency }}" alt="언급량 추이 그래프" style="width: 100%; height: auto;">
+        {% else %}
+        <div class="graph-placeholder">그래프</div>
+        {% endif %}
+      </div>
+
+      <div class="side-cards-container">
+        <div class="card card-side-second">
+          <div class="card-title-container">
+            <h2>검색어 관련 게시물</h2>
+            <div class="total-count">
+              총 <span id="total">000</span>개
+            </div>
+          </div>
+          <div id="sns-list-container">
+            <div class="sns1">
+              <div class="title-wrapper">
+                <img
+                  src="/static/img/google_icon.png"
+                  alt="구글 아이콘"
+                  class="sns-icon"
+                />
+                <p>OOO실제 후기(광고X) (예시)</p>
+              </div>
+              <div class="meta-wrapper">
+                <span>작성자</span>
+                <span>작성날짜</span>
+              </div>
+            </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="card card-graph">
+        <div class="third header">
+          <span class="icon"
+            ><svg
+              width="32"
+              height="32"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9.33329 14.6667L14.6666 2.66666C15.7275 2.66666 16.7449 3.08808 17.4951 3.83823C18.2452 4.58838 18.6666 5.60579 18.6666 6.66666V12H26.2133C26.5998 11.9956 26.9827 12.0753 27.3354 12.2336C27.6881 12.3919 28.0021 12.625 28.2558 12.9167C28.5094 13.2084 28.6966 13.5518 28.8044 13.923C28.9122 14.2942 28.938 14.6845 28.88 15.0667L27.04 27.0667C26.9435 27.7025 26.6205 28.2821 26.1305 28.6987C25.6405 29.1152 25.0164 29.3406 24.3733 29.3333H9.33329M9.33329 14.6667V29.3333M9.33329 14.6667H5.33329C4.62605 14.6667 3.94777 14.9476 3.44767 15.4477C2.94758 15.9478 2.66663 16.6261 2.66663 17.3333V26.6667C2.66663 27.3739 2.94758 28.0522 3.44767 28.5523C3.94777 29.0524 4.62605 29.3333 5.33329 29.3333H9.33329"
+                stroke="#23AF00"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22.6667 17.3333L17.3334 29.3333C16.2725 29.3333 15.2551 28.9119 14.5049 28.1618C13.7548 27.4116 13.3334 26.3942 13.3334 25.3333V20H5.78671C5.40016 20.0044 5.01729 19.9247 4.66461 19.7664C4.31193 19.6081 3.99789 19.375 3.74423 19.0833C3.49057 18.7916 3.30337 18.4483 3.19559 18.077C3.08781 17.7058 3.06203 17.3155 3.12004 16.9333L4.96004 4.93335C5.05647 4.29747 5.37946 3.71787 5.8695 3.30134C6.35954 2.88481 6.9836 2.65941 7.62671 2.66668H22.6667M22.6667 17.3333V2.66668M22.6667 17.3333H26.2267C26.9813 17.3467 27.7146 17.0825 28.2873 16.5909C28.8599 16.0993 29.2322 15.4146 29.3334 14.6667V5.33335C29.2322 4.58543 28.8599 3.90068 28.2873 3.40911C27.7146 2.91753 26.9813 2.65334 26.2267 2.66668H22.6667"
+                stroke="#E40303"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <h2>감성 분석</h2>
+        </div>
+        <div class="three three-content">
+          <div class="sentiment-section">
+            <div class="sentiment-analysis">
+              <div class="analysis-box">
+                <div class="thumbs-updown">
+                  <svg
+                    class="positiveIcon"
+                    width="32px"
+                    height="32px"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9.33329 14.6667L14.6666 2.66666C15.7275 2.66666 16.7449 3.08808 17.4951 3.83823C18.2452 4.58838 18.6666 5.60579 18.6666 6.66666V12H26.2133C26.5998 11.9956 26.9827 12.0753 27.3354 12.2336C27.6881 12.3919 28.0021 12.625 28.2558 12.9167C28.5094 13.2084 28.6966 13.5518 28.8044 13.923C28.9122 14.2942 28.938 14.6845 28.88 15.0667L27.04 27.0667C26.9435 27.7025 26.6205 28.2821 26.1305 28.6987C25.6405 29.1152 25.0164 29.3406 24.3733 29.3333H9.33329M9.33329 14.6667V29.3333M9.33329 14.6667H5.33329C4.62605 14.6667 3.94777 14.9476 3.44767 15.4477C2.94758 15.9478 2.66663 16.6261 2.66663 17.3333V26.6667C2.66663 27.3739 2.94758 28.0522 3.44767 28.5523C3.94777 29.0524 4.62605 29.3333 5.33329 29.3333H9.33329"
+                      stroke="#23AF00"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <svg
+                    class="negativeIcon"
+                    width="32px"
+                    height="32px"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M22.6667 17.3333L17.3334 29.3333C16.2725 29.3333 15.2551 28.9119 14.5049 28.1618C13.7548 27.4116 13.3334 26.3942 13.3334 25.3333V20H5.78671C5.40016 20.0044 5.01729 19.9247 4.66461 19.7664C4.31193 19.6081 3.99789 19.375 3.74423 19.0833C3.49057 18.7916 3.30337 18.4483 3.19559 18.077C3.08781 17.7058 3.06203 17.3155 3.12004 16.9333L4.96004 4.93335C5.05647 4.29747 5.37946 3.71787 5.8695 3.30134C6.35954 2.88481 6.9836 2.65941 7.62671 2.66668H22.6667M22.6667 17.3333V2.66668M22.6667 17.3333H26.2267C26.9813 17.3467 27.7146 17.0825 28.2873 16.5909C28.8599 16.0993 29.2322 15.4146 29.3334 14.6667V5.33335C29.2322 4.58543 28.8599 3.90068 28.2873 3.40911C27.7146 2.91753 26.9813 2.65334 26.2267 2.66668H22.6667"
+                      stroke="#E40303"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <input
+                    type="range"
+                    class="custom-slider"
+                    min="0"
+                    max="100"
+                    value="62"
+                    step="1"
+                    disabled
+                  />
+                </div>
+                <p class="label"></p>
+                <p class="percent-label"></p>
+              </div>
+            </div>
+          </div>
+          <div class="visualization-area">
+            {% if data %}
+            <img src="/static/img/sentiment_combined_wc.png" alt="통합 워드클라우드" style="width: 100%; height: auto;">
+            {% else %}
+            <div class="graph-placeholder small">시각화 자료</div>
+            {% endif %}
+          </div>
+          <div class="keyword-ranking">
+            <h2>긍정 / 부정 언급 단어 순위</h2>
+            <ol class="ranking-list"></ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-graph3">
+        <div class="card-title-container">
+          <img
+            src="/static//img/cross_line.png"
+            alt="교차분석"
+            class="cross-icon"
+          />
+          <h2>검색량-언급량 교차 분석</h2>
+        </div>
+        {% if data %}
+        <img src="{{ data.visualization_urls.combined_trend }}" alt="교차 분석 그래프" style="width: 100%; height: auto;">
+        {% else %}
+        <div class="graph-placeholder large">막대그래프</div>
+        {% endif %}
+      </div>
+      
+
+      <div class="card card-graph2">
+        <div class="graph2-title">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M33 7.00003C33.7956 6.20438 34.8748 5.75739 36 5.75739C36.5572 5.75739 37.1088 5.86712 37.6236 6.08034C38.1383 6.29355 38.606 6.60606 39 7.00003C39.394 7.39399 39.7065 7.8617 39.9197 8.37644C40.1329 8.89118 40.2426 9.44287 40.2426 10C40.2426 10.5572 40.1329 11.1089 39.9197 11.6236C39.7065 12.1384 39.394 12.6061 39 13L14 38L6 40L8 32L33 7.00003Z"
+              stroke="#1E1E1E"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h2>AI분석 리포트</h2>
+        </div>
+        <div class="report-content">
+          <p>AI 리포트 텍스트가 이곳에 표시됩니다...</p>
+        </div>
+      </div>
+
+      <div class="card card-graph4">
+        <div class="card-title-container">
+          <div class="title-with-arrow">
+            <h2>경쟁사 비교</h2>
+            <span class="dropdown-arrow"></span> </div>
+          
+          <form id="competitorForm" action="/compare_competitor" method="GET" class="search-form">
+          <input
+            type="text"
+            name="search"
+            placeholder="비교하고 싶은 경쟁사를 입력하세요"
+            class="search-input"
+          />
+          <button type="submit" class="search-btn">
+            <img
+              src="/static/img/magnifier.png"
+              alt="돋보기 아이콘"
+              class="search-icon"
+            />
+          </button>
+        </form>
+        </div>
+        <div style="display: flex; justify-content: center;">
+          {% if data and data.competitor_data and data.competitor_data.visualization_urls.competitor_comparison %}
+          <img src="{{ data.competitor_data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 50%; height: auto;">
+          {% else %}
+          <div class="graph-placeholder large">경쟁사 데이터가 없거나 분석되지 않았습니다.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if data %}
+    <script>
+        // ----------------------------------------------------
+        // 1. Jinja 변수로부터 초기 데이터를 설정합니다. (DOMContentLoaded 외부: 안정)
+        // ----------------------------------------------------
+    // 💡 단순 문자열 변수: JSON.parse 제거
+        const newMostdateValue = {{ data.most_frequent_date | tojson }};
+        const newChangeValueRaw = {{ data.mention_change_rate | tojson }}; 
+        const newTruepointValueRaw = {{ data.outbreak_weeks[0] | default('N/A', true) | tojson }};
+        const positivePercentage = {{ data.positive_percentage | default(50.0) }};
+        const allData = {{ data.post_list | tojson }};
+        const topKeywordsData = {{ data.top_keywords | tojson }};
+
+        // ----------------------------------------------------
+        // 📢 데이터 확인용 CONSOLE LOG 추가 (가장 중요)
+        // ----------------------------------------------------
+        console.log("--- 서버 데이터 수신 확인 ---");
+        console.log("positivePercentage:", positivePercentage);
+        console.log("allData (총 개수):", allData ? allData.length : 0);
+        console.log("topKeywordsData (상위 키워드):", topKeywordsData);
+        console.log("----------------------------");
+        
+        // ----------------------------------------------------
+        // 🔍 날짜 추출 로직 적용 (newTruepointValue)
+        // ----------------------------------------------------
+        let newTruepointValue;
+        if (newTruepointValueRaw && String(newTruepointValueRaw) !== 'N/A') {
+            // 띄어쓰기(' ')를 기준으로 문자열을 분리하고, 그 중 첫 번째 요소([0])를 날짜로 사용
+            newTruepointValue = String(newTruepointValueRaw).split(' ')[0];
+        } else {
+            // 데이터가 없거나 'N/A'인 경우 그대로 사용
+            newTruepointValue = newTruepointValueRaw;
+        }
+
+
+
+        // ----------------------------------------------------
+        // 2. DOMContentLoaded 내부: 모든 DOM 조작 로직
+        // ----------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            
+
+            // --- 2A. 초기 데이터 및 증감률 설정 (ID 기반) ---
+            const mostdateElement = document.getElementById('mostdate');
+            const truepointElement = document.getElementById('truepoint');
+            const changeElement = document.getElementById('change');
+
+            // 추가: SVG 화살표 요소를 가져옵니다.
+            const arrowUpElement = document.getElementById('arrow-up');
+            const arrowDownElement = document.getElementById('arrow-down');
+
+            if (mostdateElement) mostdateElement.textContent = newMostdateValue;
+            if (truepointElement) truepointElement.textContent = newTruepointValue;
+
+            const changeValue = parseFloat(newChangeValueRaw);
+
+            // 화살표 초기 숨김 함수 (재사용을 위해)
+            const hideArrows = () => {
+                if (arrowUpElement) arrowUpElement.style.display = 'none';
+                if (arrowDownElement) arrowDownElement.style.display = 'none';
+            };
+
+            // 화살표 초기 숨김
+            hideArrows();
+
+            if (changeElement && !isNaN(changeValue)) {
+                if (changeValue > 0) {
+                    changeElement.textContent = `▲ ${changeValue.toFixed(1)}%`;
+                    changeElement.style.color = '#00C853'; // 녹색
+                    
+                    // 상승: arrow-up 표시
+                    if (arrowUpElement) arrowUpElement.style.display = 'block';
+                    
+                } else if (changeValue < 0) {
+                    changeElement.textContent = `▼ ${Math.abs(changeValue).toFixed(1)}%`;
+                    changeElement.style.color = '#F44336'; // 빨간색
+                    
+                    // 하락: arrow-down 표시
+                    if (arrowDownElement) arrowDownElement.style.display = 'block';
+                    
+                } else {
+                    changeElement.textContent = `0.0%`;
+                    changeElement.style.color = '#888'; // 회색
+                    
+                    // 변화 없음: 화살표 숨김 (이미 위에서 hideArrows()로 처리되었지만 명시적으로 다시 호출 가능)
+                    // hideArrows(); 
+                }
+            } else if (changeElement) {
+                changeElement.textContent = `N/A`;
+                changeElement.style.color = '#888';
+                
+                // 유효하지 않은 값: 화살표 숨김
+                // hideArrows();
+            }
+
+            // ----------------------------------------------------
+            // --- 2B. 💡 감성 분석 슬라이더, 아이콘, 레이블 설정 (수정됨) ---
+            // ----------------------------------------------------
+            const customSlider = document.querySelector('.custom-slider');
+            const positiveIcon = document.querySelector('.positiveIcon');
+            const negativeIcon = document.querySelector('.negativeIcon');
+            const label = document.querySelector('.label');
+            const percentLabel = document.querySelector('.percent-label'); // 💡 백분율 레이블 요소 추가
+            
+            // 1. 슬라이더 값 설정
+            if (customSlider) {
+                customSlider.value = positivePercentage;
+            }
+
+            // 2. 아이콘 및 텍스트 레이블 설정
+            if (positiveIcon && negativeIcon && label && percentLabel) { 
+                // 백분율 표시 (소수점 첫째 자리까지)
+                percentLabel.textContent = `${positivePercentage.toFixed(1)}%`;
+                
+                if (positivePercentage >= 50) {
+                    positiveIcon.style.display = 'block';
+                    negativeIcon.style.display = 'none';
+                    label.textContent = "긍정";
+                } else {
+                    positiveIcon.style.display = 'none';
+                    negativeIcon.style.display = 'block';
+                    label.textContent = "부정";
+                }
+            } else {
+                // 요소가 누락된 경우 콘솔 경고
+                console.warn("감성 분석 섹션의 필수 DOM 요소(slider, icons, labels)가 누락되었습니다.");
+            }
+
+            // --- 2C. 키워드 순위 목록 렌더링 ---
+            const rankingList = document.querySelector('.keyword-ranking .ranking-list'); 
+
+            // topKeywordsData는 이미 배열이며, 각 요소는 키워드 객체입니다.
+            // 별도의 변환(map) 과정 없이 바로 사용할 수 있습니다.
+
+            if (rankingList && Array.isArray(topKeywordsData) && topKeywordsData.length > 0) {
+                //rankingList.innerHTML = ''; 
+
+                // '언급 횟수' 키를 사용하여 최댓값(maxCount)을 가져옵니다.
+                const maxCount = topKeywordsData[0]['언급 횟수']; 
+                const keywordsToDisplay = topKeywordsData.slice(0, 7); 
+
+                keywordsToDisplay.forEach((item, index) => {
+                    const listItem = document.createElement('li');
+                    
+                    // 한글 키워드에 접근하여 변수에 할당합니다.
+                    const keyword = item['키워드'];
+                    const count = item['언급 횟수'];
+
+                    const barWidth = (count / maxCount) * 100;
+                    
+                    // 🚨 수정된 부분: 랭크와 횟수 span을 제거하고 키워드 이름만 남깁니다.
+                    listItem.innerHTML = `
+                        <div class="ranking-bar">${keyword}</div>
+                    `;
+                    
+                    rankingList.appendChild(listItem);
+                });
+            } else if (rankingList) {
+                rankingList.innerHTML = '<li><p>분석된 키워드가 없습니다.</p></li>';
+            }
+
+
+        // --- 2D. 무한 스크롤 로직 ---
+        // =================================================================
+        // 1. SNS 목록 컨테이너 및 스크롤 요소 정의
+        // =================================================================
+
+        const totalElement = document.getElementById('total');
+        const container = document.getElementById('sns-list-container');
+        const scrollableElement = document.querySelector('.card-side-second');
+
+        // =================================================================
+        // 2. 유틸리티 및 설정
+        // =================================================================
+
+        // 🗓️ 날짜 포맷 함수: "YYYY-MM-DD" 형식으로 변환
+        const formatDate = (dateString) => {
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                
+                return `${year}-${month}-${day}`;
+            } catch (e) {
+                console.error("날짜 변환 오류:", e);
+                return dateString;
+            }
+        };
+
+        if (totalElement) {
+            // allData는 외부에서 제공되는 데이터 배열이라고 가정
+            totalElement.textContent = allData ? allData.length : 0;
+        }
+
+        if (container) container.innerHTML = ''; // 기존 콘텐츠 초기화
+
+        let itemsPerPage = 5; // 페이지당 로드할 항목 수
+        let loadedItems = 0;  // 현재 로드된 항목 수
+
+
+        // =================================================================
+        // 3. SNS 아이템 생성 함수
+        // =================================================================
+
+        const createSnsItem = (data) => {
+            const itemDiv = document.createElement('div');
+            // data.source 값에 따라 클래스 sns1 또는 sns2를 적용
+            itemDiv.classList.add(data.source === 'google' ? 'sns1' : 'sns2'); 
+            
+            // <div class="title-wrapper">
+            const titleWrapper = document.createElement('div');
+            titleWrapper.classList.add('title-wrapper');
+
+            // <img class="sns-icon"> (아이콘 소스 고정)
+            const icon = document.createElement('img');
+            icon.src = '/static/img/naver.png';
+            icon.alt = '네이버 아이콘';
+            icon.classList.add('sns-icon');
+
+            // <p> 제목 </p> (클릭 시 URL 이동)
+            // 💡 <a> 태그(하이퍼링크)를 생성하여 링크 이동을 처리합니다.
+            const titleLink = document.createElement('a');
+
+            // 텍스트 내용 설정
+            titleLink.textContent = data.title;
+
+            // data에서 URL을 가져와 href 속성에 설정 (data.url 또는 data.link 중 실제 키 사용)
+            titleLink.href = data.link; 
+
+            // 새 탭에서 열리도록 target 속성 설정
+            titleLink.target = '_blank'; 
+
+            // <p> 태그처럼 보이게 스타일 적용 (커서, 밑줄 제거 등)
+            titleLink.style.cursor = 'pointer'; 
+            titleLink.style.textDecoration = 'none'; 
+            titleLink.style.color = 'inherit'; // 링크 기본 색상 대신 텍스트 색상 상속
+
+            titleWrapper.appendChild(icon);
+            // 💡 수정된 <a> 태그를 추가합니다.
+            titleWrapper.appendChild(titleLink);
+
+            // <div class="meta-wrapper">
+            const metaWrapper = document.createElement('div');
+            metaWrapper.classList.add('meta-wrapper');
+
+            // <span> 작성자 </span>
+            const authorSpan = document.createElement('span');
+            authorSpan.textContent = data.author;
+
+            // <span> 작성날짜 </span>
+            const dateSpan = document.createElement('span');
+            dateSpan.textContent = formatDate(data.date);
+            
+            metaWrapper.appendChild(authorSpan);
+            metaWrapper.appendChild(dateSpan);
+
+            itemDiv.appendChild(titleWrapper);
+            itemDiv.appendChild(metaWrapper);
+            
+            if (container) container.appendChild(itemDiv);
+        };
+
+
+        // =================================================================
+        // 4. 항목 로드 및 무한 스크롤 로직
+        // =================================================================
+
+        // 항목 로드 함수 (itemsPerPage 개수만큼 추가 로드)
+        const loadMoreItems = () => {
+            if (!allData || loadedItems >= allData.length) return; 
+            
+            const start = loadedItems;
+            const end = Math.min(loadedItems + itemsPerPage, allData.length);
+
+            if (start < end) {
+                for (let i = start; i < end; i++) {
+                    createSnsItem(allData[i]);
+                }
+                loadedItems = end;
+            }
+        };
+
+        // 스크롤 이벤트 리스너
+        if (scrollableElement) {
+            scrollableElement.addEventListener('scroll', () => {
+                // 스크롤이 끝에서 100px 이내로 도달했을 때 추가 로드
+                const isNearEnd = scrollableElement.scrollTop + scrollableElement.clientHeight >= scrollableElement.scrollHeight - 100;
+                
+                if (loadedItems < allData.length && isNearEnd) {
+                    loadMoreItems();
+                }
+            });
+        }
+
+        // ============== 🚀 상위 5개 데이터 콘솔 확인 로직 (디버깅용) ==============
+        if (allData && allData.length > 0) {
+            console.log("--- 상위 5개 게시물 데이터 (디버깅용) ---");
+            
+            const top5Items = allData.slice(0, 5);
+            
+            top5Items.forEach((data, index) => {
+                const formattedDate = formatDate(data.date);
+                
+                console.log(`[${index + 1}위] 제목: ${data.title}, 작성자: ${data.author}, 작성 날짜: ${formattedDate}, URL: ${data.link}`);
+            });
+            
+            console.log("------------------------------------------");
+        }
+
+        // ============= ✅ 초기 로드 (페이지 로드 시 최초 5개 항목 표시) =============
+        if (allData && allData.length > 0) {
+            loadMoreItems(); 
+        }
+
+        // 🚀 페이지 로드 시 초기 항목 로드
+        loadMoreItems();
+        });
+    </script>
+    {% endif %}
+  </body>
 </html>
