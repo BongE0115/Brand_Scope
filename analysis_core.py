@@ -64,8 +64,8 @@ def save_and_get_url(plot_func, filename, static_folder):
 
 # ----------------------------------------------------
 # --- ⚠️설정 (Configuration) ---
-NAVER_CLIENT_ID = "keeE_3_zOuG8ndn5AdQd" 
-NAVER_CLIENT_SECRET = "FVUwmNaHst" 
+NAVER_CLIENT_ID = "oo" 
+NAVER_CLIENT_SECRET = "oo" 
 # ----------------------------------------------------
 
 # 🚨🚨 데이터 수집 갯수 설정 부분 🚨🚨
@@ -1033,7 +1033,7 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     }).to_dict('records')
 
     # ⚠️ [설정] 여기에 Gemini API 키를 직접 입력하세요 (따옴표 안에)
-    MY_GEMINI_KEY = "AIzaSyD7SMWEdC-6jA2C1pZvVAGeyROLVNitcYI"
+    MY_GEMINI_KEY = "dd"
 
     # AI 리포트 생성 호출
     analysis_results["ai_report"] = generate_smart_report(

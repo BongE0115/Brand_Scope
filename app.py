@@ -6,9 +6,9 @@ app = Flask(__name__, static_url_path='/static', static_folder='static',template
 
 # ⚠️ [필수 수정] 여기에 실제 Naver API 정보를 입력하세요! ⚠️
 # analysis_core.py의 run_full_analysis 함수가 이 정보를 필요로 합니다.
-NAVER_CLIENT_ID = "BKnRrHgb5IJH3rJmqvhm" 
-NAVER_CLIENT_SECRET = "BTnWjOC2uB"
-MAX_RESULTS = 10000 # 한 종류의 소스(블로그/뉴스)당 최대 수집 개수
+NAVER_CLIENT_ID = "oo" 
+NAVER_CLIENT_SECRET = "oo"
+MAX_RESULTS = 1000 # 한 종류의 소스(블로그/뉴스)당 최대 수집 개수
 
 # 임시로 그래프 이미지를 저장할 디렉토리 생성
 STATIC_FOLDER = os.path.join(os.getcwd(), 'static')
