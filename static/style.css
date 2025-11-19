@@ -46,6 +46,17 @@ body {
   border: none; /* 테두리 제거 */
 }
 
+.search-input-first {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: #f7f7f7; /* 시안에 맞춰 약간 어둡게 */
+  border: none; /* 테두리 제거 */
+}
+
 /* 검색 버튼 스타일 */
 .search-btn {
   position: absolute;
@@ -207,12 +218,14 @@ body {
 
 /* 4행 (우): AI 리포트 */
 .card-graph2 {
-  grid-column: 3 / 4; /* 4행 3열 */
+  grid-column: 3 / 4;
   grid-row: 4;
   width: auto;
-  min-height: 500px;
+  height:auto;
+  min-height: auto; 
   position: relative;
-  flex-direction: column; /* 내부 요소 세로 정렬 */
+  display: flex;        
+  flex-direction: column; 
 }
 
 /* 5행: 연관어 비교 (신규) */
@@ -399,6 +412,20 @@ body {
   gap: 10px;
 }
 
+/* 키워드 랭킹 목록 내부 스크롤 설정: 많은 항목이 있어도 카드가 늘어나지 않도록 고정 높이와 내부 스크롤을 적용합니다. */
+.keyword-ranking .ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 항목 사이 여백 */
+  max-height: 300px;
+  /* 필요에 따라 조정하세요 */
+  overflow-y: auto;
+  padding-right: 8px;
+  /* 스크롤바와 내용 사이 여백 */
+  margin: 0;
+  /* 기본 ol 여백 제거 */
+}
 .visualization-area h2,
 .keyword-ranking h2 {
   margin: 0;
@@ -547,4 +574,49 @@ body {
 .title-wrapper {
   display:flex;
   padding: 3px;
+}
+
+/* 3. 마크다운 변환 태그 스타일링 (특수문자 대신 적용될 디자인) */
+
+/* 제목 (### -> h3) */
+.card-graph2 .report-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-top: 25px;   /* 위쪽 여백 */
+    margin-bottom: 10px; /* 아래쪽 여백 */
+    border-bottom: 2px solid #eee; /* 밑줄 장식 */
+    padding-bottom: 5px;
+}
+/* 첫 번째 제목은 위쪽 여백 제거 */
+.card-graph2 .report-content h3:first-child {
+    margin-top: 0;
+}
+
+/* 소제목 (#### -> h4) */
+.card-graph2 .report-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* 강조 ( **단어** -> strong ) */
+.card-graph2 .report-content strong {
+    color: #d35400;       /* 강조색 (주황 계열) */
+    background-color: #fff3cd; /* 형광펜 효과 (연한 노랑) */
+    padding: 0 4px;       /* 배경색 여백 */
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* 리스트 ( - 항목 -> ul, li ) */
+.card-graph2 .report-content ul {
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+.card-graph2 .report-content li {
+    margin-bottom: 5px;
+    list-style-type: disc; /* 점 모양 */
 }
