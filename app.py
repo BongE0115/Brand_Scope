@@ -161,3 +161,4 @@ def compare_competitor():
 if __name__ == '__main__':
     # ⚠️ [수정] 포트를 8000번으로 설정합니다.
     app.run(debug=True, port=8000)
+

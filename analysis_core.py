@@ -72,6 +72,7 @@ NAVER_CLIENT_SECRET = "oo"
 MAX_RESULTS_PER_API = 1000 
 
 
+
 # --- 순수 Python 감성 사전 정의 (Lexicon) ---
 POSITIVE_WORDS = [
     '좋아요', '최고', '만족', '추천', '강력추천', '대박', '예쁘', '예쁘다', '편안', '편안함',
