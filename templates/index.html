@@ -8,6 +8,7 @@
 
   <body>
     <div class="box">
+      <h3>Brand Scope</h3>
       <div class="rectangle">
         <div class="overlap">
           <img class="university-element" src="/static/img/universitylogo.png" />
@@ -340,6 +341,20 @@
     </div>
   </div>
 
+  <footer class="footer-area">
+    <div class="footer-zone">
+      <div class="out-name">
+        <p>202001934 신봉근 </p>
+        <span>·</span>
+        <p>202001926 김일건 </p>
+        <span>·</span>
+        <p>202101916 이혜연</p>
+      </div>
+        <span>·</span>
+        <p>Copyright © 2025 Brand_Scope. All rights reserved.</p>
+    </div>
+  </footer>
+
     {% if data %}
     <script>
     const competitorForm = document.getElementById('competitorForm');
@@ -439,18 +454,22 @@
         console.log("topKeywordsData (상위 키워드):", topKeywordsData);
         console.log("----------------------------");
         
-        // ----------------------------------------------------
-        // 🔍 날짜 추출 로직 적용 (newTruepointValue)
-        // ----------------------------------------------------
-        let newTruepointValue;
-        if (newTruepointValueRaw && String(newTruepointValueRaw) !== 'N/A') {
-            // 띄어쓰기(' ')를 기준으로 문자열을 분리하고, 그 중 첫 번째 요소([0])를 날짜로 사용
-            newTruepointValue = String(newTruepointValueRaw).split(' ')[0];
-        } else {
-            // 데이터가 없거나 'N/A'인 경우 그대로 사용
-            newTruepointValue = newTruepointValueRaw;
-        }
-
+      // ----------------------------------------------------
+      // 🔍 날짜 추출 로직 적용 (newTruepointValue)
+      // ----------------------------------------------------
+      let newTruepointValue;
+      if (newTruepointValueRaw && String(newTruepointValueRaw) !== 'N/A') {
+          
+          // 띄어쓰기(' ')를 기준으로 문자열을 분리합니다.
+          const parts = String(newTruepointValueRaw).split(' ');
+          
+          // '2025년', '11월', '(45주차)' 세 부분을 합칩니다.
+          if (parts.length >= 4) { 
+              newTruepointValue = `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`; 
+          } else {
+              newTruepointValue = String(newTruepointValueRaw);
+          }
+      }
 
 
         // ----------------------------------------------------

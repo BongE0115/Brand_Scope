@@ -19,7 +19,7 @@ import numpy as np
 
 # 태그 클라우드 라이브러리
 from wordcloud import WordCloud 
-
+from datetime import datetime, timedelta
 
 # 시각화 라이브러리
 import seaborn as sns
@@ -745,20 +745,63 @@ def generate_smart_report(query, total_mentions, sentiment_label, positive_score
 # --- 핵심 분석 함수 (지표 계산 및 감성 분석) ---
 # ----------------------------------------------------
 
-def find_outbreak_weeks(trend_df, change_threshold=0.5):
-    """ 월간 검색량 비율을 기준으로 전월 대비 검색량이 급증한 월간을 찾습니다. """
-    print(f"\n--- 6단계 분석: 이슈 확산 월간 추출 시작 (전월 대비 {change_threshold * 100:.0f}% 초과 증가 기준) ---")
+def get_month_week_from_iso(year, iso_week_number):
+    # (생략: date_obj, month, first_monday_of_month_week 계산 로직은 이전과 동일)
+    try:
+        # ISO 주차의 월요일 날짜를 정확히 구합니다.
+        date_str = f'{year}-{iso_week_number}-1' 
+        date_obj = datetime.strptime(date_str, '%G-%V-%u')
+    except ValueError:
+        date_obj = datetime(year, 1, 1) + timedelta(weeks=iso_week_number - 1, days=1)
+
+    month = date_obj.month
+    
+    first_day_of_month = date_obj.replace(day=1)
+    first_monday_of_month_week = first_day_of_month - timedelta(days=first_day_of_month.weekday())
+
+    time_difference = date_obj - first_monday_of_month_week
+    
+    week_of_month = time_difference.days // 7 + 1
+    
+    # ⚠️ 안정성 강화: 만약 계산된 주차가 다음 달로 넘어간 경우, 
+    # 즉, date_obj가 다음 달의 날짜를 가리킨다면, 해당 월의 주차를 5주차로 고정합니다. 
+    # (다만, 이 로직은 ISO 주차를 쓰므로 date_obj.month는 정확해야 함)
+    
+    # 🌟🌟🌟 디버깅을 위해 주차 계산 전후의 정보를 출력합니다.
+    print(f"DEBUG: Date={date_obj.strftime('%Y-%m-%d')}, Month={month}, Calculated Week={week_of_month}")
+
+    # 계산된 주차의 마지막 날짜가 다음 달로 넘어갔는지 확인하는 로직 (선택 사항)
+    # 현재는 date_obj.month가 정확하므로, 이 부분이 문제의 근본 원인은 아닐 가능성이 높습니다.
+    # if (week_of_month == 5 or week_of_month == 6) and date_obj.month != month:
+    #     week_of_month = 1 # 이 경우는 다음 달의 1주차가 되어야 함 (그러나 date_obj.month가 이미 다음 달이 되었어야 함)
+    
+    return month, week_of_month
+
+
+
+def find_outbreak_weeks(trend_df, change_threshold=5.0):
+    """ 주간 검색량 비율을 기준으로 전주 대비 검색량이 급증한 주간을 찾습니다. """
+    print(f"\n--- 6단계 분석: 이슈 확산 주간 추출 시작 (전주 대비 {change_threshold * 100:.0f}% 초과 증가 기준) ---")
     
     if trend_df.empty or 'date' not in trend_df.columns:
-        print("-> ❌ 검색량(데이터랩) 데이터가 없어 확산 월간 분석을 건너뜁니다.")
+        print("-> ❌ 검색량(데이터랩) 데이터가 없어 확산 주간 분석을 건너뜁니다.")
         return []
 
-    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).replace(day=1)
+    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # date 컬럼을 datetime으로 변환 (안정성 확보)
+    if not pd.api.types.is_datetime64_any_dtype(trend_df['date']):
+        try:
+            trend_df['date'] = pd.to_datetime(trend_df['date'])
+        except Exception:
+            print("-> ❌ 'date' 컬럼을 datetime 형식으로 변환할 수 없습니다.")
+            return []
+            
     filtered_trend_df = trend_df[trend_df['date'] < now].copy()
     filtered_trend_df = filtered_trend_df.sort_values(by='date')
     
     if filtered_trend_df.empty:
-        print("-> ❌ 유효한 과거 월간 데이터가 없어 확산 월간 분석을 건너뜁니다.")
+        print("-> ❌ 유효한 과거 주간 데이터가 없어 확산 주간 분석을 건너뜁니다.")
         return []
 
     filtered_trend_df['ratio'] = pd.to_numeric(filtered_trend_df['ratio'], errors='coerce')
@@ -766,45 +809,37 @@ def find_outbreak_weeks(trend_df, change_threshold=0.5):
     filtered_trend_df['prev_ratio'] = filtered_trend_df['ratio'].shift(1).fillna(0)
     
     filtered_trend_df['change_rate'] = filtered_trend_df.apply(
-        lambda row: (row['ratio'] - row['prev_ratio']) / row['prev_ratio'] 
-                     if row['prev_ratio'] > 0 else (100.0 if row['ratio'] > 0 else 0), 
+        lambda row: (row['ratio'] - row['prev_ratio']) / row['prev_ratio']  
+                      if row['prev_ratio'] > 0 else (100.0 if row['ratio'] > 0 else 0),  
         axis=1
     )
     
-    outbreak_months_df = filtered_trend_df[
-        ((filtered_trend_df['prev_ratio'] > 0) & (filtered_trend_df['change_rate'] > change_threshold)) | 
+    outbreak_weeks_df = filtered_trend_df[
+        ((filtered_trend_df['prev_ratio'] > 0) & (filtered_trend_df['change_rate'] > change_threshold)) |  
         ((filtered_trend_df['prev_ratio'] == 0) & (filtered_trend_df['ratio'] > 0))
     ].copy()
     
     outbreak_results = []
-    if not outbreak_months_df.empty:
-        outbreak_months_df = outbreak_months_df.sort_values(by='ratio', ascending=False)
-        for _, row in outbreak_months_df.iterrows():
+    if not outbreak_weeks_df.empty:
+        outbreak_weeks_df = outbreak_weeks_df.sort_values(by='ratio', ascending=False)
+        
+        for _, row in outbreak_weeks_df.iterrows():
             date_obj = row['date']
             year = date_obj.year
-            month = date_obj.month
             
-            # 월의 첫 날을 기준으로 주차 계산 (ISO 주차 사용)
-            # ISO 주차: 월요일을 주의 시작으로 함
+            # ISO 연간 주차를 추출합니다.
             iso_calendar = date_obj.isocalendar()
-            week_of_year = iso_calendar[1]  # ISO 주차 (1~53)
+            iso_week_number = iso_calendar[1] 
+
+            # 수정된 헬퍼 함수를 사용하여 정확한 월과 월별 주차를 얻습니다.
+            month, week_of_month = get_month_week_from_iso(year, iso_week_number)
             
-            # 더 직관적인 월별 주차 계산: 월의 첫 날부터의 주차
-            # (0-based index에서 +1 하여 1~5 범위)
-            first_day_of_month = date_obj.replace(day=1)
-            days_since_month_start = (date_obj - first_day_of_month).days
-            week_of_month = (days_since_month_start // 7) + 1
+            # 포맷팅: 년/월/주차 형식 (예: 2025년 11월 4주차)
+            date_with_week = f"{year}년 {month:02d}월 {week_of_month}주차"  
             
-            current_ratio = row['ratio']
-            prev_ratio = row['prev_ratio']
+            outbreak_results.append(date_with_week)  
             
-            rate_str = f"{row['change_rate'] * 100:.1f}% 증가" if row['prev_ratio'] > 0 else "신규 발생 (전월 0)"
-            
-            # 년/월/주차 형식으로 포맷팅
-            date_with_week = f"{year}-{month:02d}/{week_of_month}주차"
-            outbreak_results.append(f"{date_with_week} (현재 비율: {current_ratio:.1f}, 전월: {prev_ratio:.1f}, {rate_str})")
-            
-        print(f"-> ✅ 총 {len(outbreak_results)}개의 검색량 급증 월간을 찾았습니다.")
+        print(f"-> ✅ 총 {len(outbreak_results)}개의 검색량 급증 주간을 찾았습니다.")
         
     return outbreak_results
 
