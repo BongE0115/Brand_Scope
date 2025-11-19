@@ -1033,7 +1033,7 @@ def run_full_analysis(search_query: str, competitor_query: str, client_id: str, 
     }).to_dict('records')
 
     # ⚠️ [설정] 여기에 Gemini API 키를 직접 입력하세요 (따옴표 안에)
-    MY_GEMINI_KEY = "dd"
+    MY_GEMINI_KEY = "oo"
 
     # AI 리포트 생성 호출
     analysis_results["ai_report"] = generate_smart_report(
