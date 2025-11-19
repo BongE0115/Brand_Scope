@@ -22,6 +22,38 @@ body {
   justify-content: center;
 }
 
+
+.box {
+    /* h3의 absolute 위치를 위한 기준점 */
+    position: relative; 
+    /* .box의 다른 스타일 (예: background-color, height, width 등)은 유지 */
+    background-color: #ADD8E6; /* 예시: 파란색 배경 */
+    height: 150px; /* 예시: h3와 다른 콘텐츠를 담을 충분한 높이 */
+    overflow: visible; /* 혹시 내용이 잘릴까 봐 */
+}
+
+.box h3 {
+    /* h3를 절대 위치로 설정 */
+    position: fixed; 
+    
+    /* 파란 영역의 왼쪽 상단에 배치 (여백 10px) */
+    top: 23px;    
+    left: 20px;   
+    
+    /* 다른 모든 요소 위에 표시되도록 z-index를 매우 높게 설정 */
+    z-index: 9999; /* 매우 높은 값으로, 다른 어떤 요소보다 위에 오게 함 */
+    
+    /* 기본 h3 마진은 제거 */
+    margin: 0; 
+    
+    /* 글자색이 배경에 묻히지 않도록 확실히 지정 */
+    color: rgb(255, 255, 255); /* 파란 배경 위에 잘 보이도록 흰색 지정 */
+    
+    /* 글씨 크기나 굵기 등 필요에 따라 추가 */
+    font-size: 24px;
+    font-weight: bold;
+}
+
 /* 로고 이미지 스타일 */
 .university-element {
   width: 50px;
@@ -619,4 +651,49 @@ body {
 .card-graph2 .report-content li {
     margin-bottom: 5px;
     list-style-type: disc; /* 점 모양 */
+}
+
+.footer-area {
+    /* 배경색 지정 (이미지와 유사한 밝은 회색) */
+    background-color: #f7f7f7; 
+    /* 상단과 하단 여백 및 내부 패딩 설정 */
+    padding: 20px 0;
+    margin-top: 40px; 
+    /* 폰트 크기 및 색상 설정 */
+    font-size: 13px;
+    color: #666;
+    /* 텍스트 중앙 정렬 */
+    text-align: center;
+    /* 페이지 하단에 붙이려면 필요에 따라 position: fixed/absolute 사용 */
+}
+
+/* 링크 스타일 */
+.footer-area p {
+    color: #666; /* 링크 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+    padding: 0 5px; /* 링크 간 간격 */
+}
+
+/* 구분자 스타일 */
+.footer-area span {
+    color: #ccc; /* 구분점 색상 */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.out-name {
+    /* 🌟 핵심: 내부 요소(p와 span)를 가로로 배치 */
+    display: flex;
+    
+    /* 세로 축을 기준으로 요소들을 중앙에 정렬합니다. */
+    align-items: center; 
+    
+    /* (선택 사항) p와 span 사이의 간격을 좀 더 명확하게 지정 */
+    gap: 8px; 
+    
+    /* .footer-area의 text-align: center가 out-name 전체를 중앙에 배치합니다. */
+    /* out-name 내부의 텍스트 정렬은 p 태그에 맡깁니다. */
+    
+    /* out-name div 자체를 중앙에 배치하기 위해 필요한 경우: */
+    justify-content: center;
 }
