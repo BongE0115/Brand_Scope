@@ -2,22 +2,27 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="/static/img/favicon.ico" />
     <link rel="stylesheet" href="/static/globals.css" />
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/style.css?v=2" />
   </head>
 
   <body>
     <div class="box">
-      <h3>Brand Scope</h3>
+      <h3>
+        <a href="http://brandscope.ap-northeast-2.elasticbeanstalk.com">Brand Scope</a>
+      </h3>
       <div class="rectangle">
         <div class="overlap">
-          <img class="university-element" src="/static/img/universitylogo.png" />
+          <a href="http://brandscope.ap-northeast-2.elasticbeanstalk.com">
+            <img class="university-element" src="/static/img/universitylogo.png" />
+          </a>
         </div>
-        <form id="searchForm" form action="http://127.0.0.1:8000/search" method="GET" class="search-form">
+        <form id="searchForm" form action="/search" method="GET" class="search-form">
           <input
             type="text"
             name="main-search"
-            placeholder="브랜드를 입력하세요"
+            placeholder="브랜드를 입력하세요. 분석에 1분 이상의 시간이 소요될 수 있습니다."
             class="search-input-first"
           />
           <button type="submit" class="search-btn">
@@ -52,7 +57,7 @@
         </div>
         <div class="littletitle">
           <h4>이슈 확산 포인트</h4>
-          <b id="truepoint">이때</b>
+          <b id="truepoint"></b>
           <h6 id="last-month">*일정수준 이상의 검색량 급증을 기준으로 판단</h6>
         </div>
       </div>
@@ -76,7 +81,7 @@
         </div>
         <div class="littletitle">
           <h4>최다 언급량 일자</h4>
-          <b id="mostdate">언제</b>
+          <b id="mostdate"></b>
         </div>
       </div>
       <div class="card card-small">
@@ -116,7 +121,7 @@
         </div>
         <div class="littletitle">
           <h4>언급량 증감률</h4>
-          <b id="change">저쩌구</b>
+          <b id="change"></b>
         </div>
         <h6 id="last-month">*지난 30일 대비</h6>
       </div>
@@ -132,7 +137,7 @@
         {% if data %}
         <img id="frequency-graph" src="{{ data.visualization_urls.weekly_frequency }}" alt="언급량 추이 그래프" style="width: 100%; height: auto;">
         {% else %}
-        <div class="graph-placeholder">그래프</div>
+        <div class="graph-placeholder"></div>
         {% endif %}
       </div>
 
@@ -243,7 +248,7 @@
                     class="custom-slider"
                     min="0"
                     max="100"
-                    value="62"
+                    value="50"
                     step="1"
                     disabled
                   />
@@ -257,11 +262,11 @@
             {% if data %}
             <img src="/static/img/sentiment_combined_wc.png" alt="통합 워드클라우드" style="width: 100%; height: auto;">
             {% else %}
-            <div class="graph-placeholder small">시각화 자료</div>
+            <div class="graph-placeholder small"></div>
             {% endif %}
           </div>
           <div class="keyword-ranking">
-            <h2>긍정 / 부정 언급 단어 순위</h2>
+            <h2>긍정/부정 언급 단어 순위</h2>
             <ol class="ranking-list"></ol>
           </div>
         </div>
@@ -279,7 +284,7 @@
         {% if data %}
         <img src="{{ data.visualization_urls.combined_trend }}" alt="교차 분석 그래프" style="width: 100%; height: auto;">
         {% else %}
-        <div class="graph-placeholder large">막대그래프</div>
+        <div class="graph-placeholder large"></div>
         {% endif %}
       </div>
       
@@ -315,11 +320,14 @@
           <h2>경쟁사 비교</h2>
           <span class="dropdown-arrow"></span> </div>
         
-        <form id="competitorForm" action="/compare_competitor" method="GET" class="search-form">
+        <form id="competitorForm" action="/search" method="GET" class="search-form">
+  
+        <input type="hidden" name="main-search" value="{{ data.query if data else '' }}">
+
         <input
           type="text"
           name="competitor-search"
-          placeholder="비교하고 싶은 경쟁사를 입력하세요"
+          placeholder="비교하고 싶은 경쟁사를 입력하세요."
           class="search-input"
         />
         <button type="submit" class="search-btn">
@@ -332,11 +340,17 @@
       </form>
       </div>
       <div style="display: flex; justify-content: center;">
-        {% if data and data.competitor_data and data.competitor_data.visualization_urls.competitor_comparison %}
-        <img src="{{ data.competitor_data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 50%; height: auto;">
+        {% if data and data.visualization_urls and data.visualization_urls.competitor_comparison %}
+          <img src="{{ data.visualization_urls.competitor_comparison }}" alt="경쟁사 비교 그래프" style="width: 50%; height: auto;">
         {% else %}
-        <div class="graph-placeholder large">경쟁사 데이터가 없거나 분석되지 않았습니다.</div>
+          <div class="graph-placeholder large">
+            경쟁사 데이터가 없거나 분석되지 않았습니다.
+          </div>
         {% endif %}
+      </div>
+      <div id="competitor-loader">
+        <div class="spinner"></div>
+        <p class="loading-text">경쟁사 데이터를 분석 중입니다...<br>(약 30초 소요)</p>
       </div>
     </div>
   </div>
@@ -351,9 +365,15 @@
         <p>202101916 이혜연</p>
       </div>
         <span>·</span>
+        <p>bgshin0115@naver.com </p>
+        <span>·</span>
         <p>Copyright © 2025 Brand_Scope. All rights reserved.</p>
     </div>
   </footer>
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <p class="loading-text">브랜드 평판을 분석하고 리포트를 생성 중입니다... 🤖<br>(약 1분 소요)</p>
+  </div>
 
     {% if data %}
     <script>
@@ -605,7 +625,7 @@
 
         const totalElement = document.getElementById('total');
         const container = document.getElementById('sns-list-container');
-        const scrollableElement = document.querySelector('.card-side-second');
+        const scrollableElement = document.querySelector('.sns-list-container');
 
         // =================================================================
         // 2. 유틸리티 및 설정
@@ -635,7 +655,7 @@
 
         if (container) container.innerHTML = ''; // 기존 콘텐츠 초기화
 
-        let itemsPerPage = 5; // 페이지당 로드할 항목 수
+        let itemsPerPage = 20; // 페이지당 로드할 항목 수
         let loadedItems = 0;  // 현재 로드된 항목 수
 
 
@@ -725,7 +745,7 @@
         if (scrollableElement) {
             scrollableElement.addEventListener('scroll', () => {
                 // 스크롤이 끝에서 100px 이내로 도달했을 때 추가 로드
-                const isNearEnd = scrollableElement.scrollTop + scrollableElement.clientHeight >= scrollableElement.scrollHeight - 100;
+                const isNearEnd = scrollableElement.scrollTop + scrollableElement.clientHeight >= scrollableElement.scrollHeight - 50;
                 
                 if (loadedItems < allData.length && isNearEnd) {
                     loadMoreItems();
@@ -789,5 +809,58 @@
         });
     </script>
     {% endif %}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. 메인 검색 폼 처리 (전체 화면 로딩)
+        const mainForm = document.getElementById('searchForm');
+        const globalLoader = document.getElementById('global-loader');
+        const mainInput = document.querySelector('.search-input-first');
+
+        if (mainForm) {
+            mainForm.addEventListener('submit', function(e) {
+                // 입력값이 있을 때만 로딩 표시
+                if (mainInput && mainInput.value.trim() !== "") {
+                    if (globalLoader) globalLoader.style.display = 'flex'; 
+                }
+            });
+        }
+
+        // 2. 경쟁사 분석 폼 처리 (카드 내부 로딩)
+        const compForm = document.getElementById('competitorForm');
+        const compLoader = document.getElementById('competitor-loader');
+        const compInput = document.querySelector('input[name="competitor-search"]');
+
+        // 경쟁사 검색 시, 메인 검색어도 유지하기 위해 hidden input 추가
+        if (compForm) {
+            compForm.addEventListener('submit', function(e) {
+                // 메인 검색어 값 가져오기
+                const mainSearchVal = mainInput ? mainInput.value : "";
+                
+                // 기존에 hidden input이 없으면 생성
+                let hiddenMain = compForm.querySelector('input[name="main-search"]');
+                if (!hiddenMain) {
+                    hiddenMain = document.createElement('input');
+                    hiddenMain.type = 'hidden';
+                    hiddenMain.name = 'main-search';
+                    compForm.appendChild(hiddenMain);
+                }
+                hiddenMain.value = mainSearchVal;
+
+                if (compInput && compInput.value.trim() !== "") {
+                    if (compLoader) compLoader.style.display = 'flex';
+                }
+            });
+        }
+    });
+  </script>
+  {% if error %}
+  <script>
+      // 1. 경고창 띄우기
+      alert("{{ error }}");
+      
+      // 2. (선택사항) 확인 누르면 주소창을 깨끗하게 초기화 (메인으로 이동)
+      window.location.href = "/";
+  </script>
+  {% endif %}
   </body>
 </html>
