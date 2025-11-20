@@ -7,72 +7,99 @@ from datetime import datetime, timedelta
 from collections import Counter 
 import gc 
 import matplotlib.pyplot as plt 
+from matplotlib import font_manager, rc
 import matplotlib
 import requests.utils
 import threading
 import time
 import markdown
+import uuid  # 👈 [핵심] 사용자 간 파일 덮어쓰기 방지
+from dotenv import load_dotenv
+load_dotenv()
 
-# ⚠️ [추가] Flask 연동 및 데이터 처리를 위해 필수적인 라이브러리 추가
+# Flask 연동 및 데이터 처리를 위해 필수적인 라이브러리
 import io 
 import numpy as np 
+import shutil # 👈 캐시 삭제용
 
-# 태그 클라우드 라이브러리
+# 태그 클라우드 & 시각화 라이브러리
 from wordcloud import WordCloud 
-from datetime import datetime, timedelta
-
-# 시각화 라이브러리
 import seaborn as sns
 
-from matplotlib import font_manager, rc 
+# ==================================================================
+# [1] 폰트 캐시 삭제 및 강제 설정
+# ==================================================================
+def set_custom_font():
+    try:
+        cache_dir = matplotlib.get_cachedir()
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+    except Exception:
+        pass
 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(current_dir, 'static', 'NanumGothic.ttf')
+    global FONT_PATH 
 
-def save_and_get_url(plot_func, filename, static_folder):
+    if os.path.exists(font_path):
+        try:
+            font_manager.fontManager.addfont(font_path)
+            font_prop = font_manager.FontProperties(fname=font_path)
+            font_name = font_prop.get_name()
+            plt.rcParams['font.family'] = font_name
+            rc('font', family=font_name)
+            FONT_PATH = font_path
+        except Exception as e:
+            print(f"-> [에러] 폰트 설정 실패: {e}")
+            FONT_PATH = None
+    else:
+        FONT_PATH = None
+
+set_custom_font()
+plt.rcParams['axes.unicode_minus'] = False
+
+# ==================================================================
+# [2] 시각화 저장 함수 (파일명 중복 방지 & 캐시 방지)
+# ==================================================================
+def save_and_get_url(plot_func, filename, static_folder, unique_id): # 👈 unique_id 추가
     """ Matplotlib 그래프를 파일로 저장하고 URL을 반환합니다. """
     if not static_folder:
         return None
 
     try:
-        # --- ⚠️ [수정] ---
-        # 1. 'static' 폴더 안에 'img' 폴더 경로를 만듭니다.
         img_save_path = os.path.join(static_folder, 'img')
-
-        # 2. 'static/img' 폴더가 없으면 새로 생성합니다.
         if not os.path.exists(img_save_path):
             os.makedirs(img_save_path)
-        # ---------------------
 
         plot_object = plot_func()
+        if plot_object is None: return None
 
-        if plot_object is None:
-             return None
-
-        # 3. 파일 저장 경로를 'static/img/파일이름'으로 변경합니다.
-        filepath = os.path.join(img_save_path, filename) # 👈 static/img/파일이름
+        # 파일명 앞에 고유 ID를 붙여서 겹치지 않게 함
+        final_filename = f"{unique_id}_{filename}"
+        filepath = os.path.join(img_save_path, final_filename)
 
         if os.path.exists(filepath):
             os.remove(filepath)
 
         plot_object.savefig(filepath, dpi=100)
-        plt.close('all')        # 4. 브라우저가 이미지를 요청할 URL도 '/static/img/파일이름'으로 변경합니다.
-        return f"/static/img/{filename}" # 👈 /static/img/파일이름
+        plt.close('all')
+        
+        # URL 뒤에 타임스탬프를 붙여 브라우저 캐시 방지
+        timestamp = int(time.time())
+        return f"/static/img/{final_filename}?v={timestamp}"
 
     except Exception as e:
-        print(f"-> ❌ 시각화 저장 및 URL 생성 중 오류 발생 ({filename}): {e}")
+        print(f"-> ❌ 시각화 저장 오류 ({filename}): {e}")
         plt.close('all')
         return None
 
 # ----------------------------------------------------
-# --- ⚠️설정 (Configuration) ---
-NAVER_CLIENT_ID = "oo" 
-NAVER_CLIENT_SECRET = "oo" 
-# ----------------------------------------------------
-
-# 🚨🚨 데이터 수집 갯수 설정 부분 🚨🚨
+# --- 설정 (Configuration) ---
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
+NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 MAX_RESULTS_PER_API = 1000 
 
-
-# --- 순수 Python 감성 사전 정의 (Lexicon) ---
+# --- 감성 사전 (기존 유지) ---
 POSITIVE_WORDS = [
     '좋아요', '최고', '만족', '추천', '강력추천', '대박', '예쁘', '예쁘다', '편안', '편안함',
     '행복', '감사', '기쁨', '훌륭', '사랑', '재미', '즐거움', '성공', '합격', '선물',
@@ -98,361 +125,285 @@ NEGATIVE_WORDS = [
     '불합리', '악화', '악성', '부정', '부적절', '실망스러웠다', '실망했다', '후회한다', '실망해요', '최악이다',
     '최악이에요', '형편없다', '엉망진창', '엉성', '값비싼', '불친절했어요', '불편했습니다', '부정확함', '부주의', '문제가있다'
 ]
-# --- 폰트 설정 (통합 로직) ---
-# 1. 시스템에 설치된 한글 폰트 찾기
-def get_korean_font():
-    """시스템에서 사용 가능한 한글 폰트(Malgun Gothic, AppleGothic, NanumGothic 등)를 찾습니다."""
-    font_names = ['Malgun Gothic', 'AppleGothic', 'NanumGothic', 'Noto Sans CJK JP']
-    for font_name in font_names:
-        font_path = font_manager.findfont(font_name)
-        if font_path:
-            return font_name, font_path
-    return None, None
 
-korean_font_name, korean_font_path = get_korean_font()
-
-if korean_font_name:
-    # 2. 폰트 캐시 초기화 (필요시)
-    try:
-        # 이 부분은 환경에 따라 캐시가 존재하지 않을 수 있습니다.
-        pass
-    except Exception:
-        pass
-    
-    # 3. Matplotlib에 폰트 설정 적용
-    # ⚠️ [유지] font_manager.fontManager.addfont 호출은 환경에 따라 에러를 일으킬 수 있지만, 
-    # 안정적인 사용자 환경을 가정하고 유지합니다.
-    # font_manager.fontManager.addfont(korean_font_path)
-    rc('font', family=korean_font_name)
-    print(f"-> [OK] 한글 폰트 '{korean_font_name}' 설정 완료.")
-    FONT_PATH = korean_font_path # 워드클라우드용 경로 설정
-else:
-    print("[WARNING] 한글 폰트를 찾을 수 없습니다. 기본 폰트로 실행합니다.")
-    FONT_PATH = None
-    
-plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
-# ----------------------------------------------------
-
-# ----------------------------------------------------
-# --- 검색어 유효성 및 브랜드명 검증 함수 ---
-# ----------------------------------------------------
-
+# --- 유틸리티 함수들 (검증, 수집, 분석) ---
 def is_valid_query(query):
-    """ 무의미한 반복 문자열, 너무 짧은 문자열 등을 걸러내 분석을 위한 검색어인지 확인합니다. """
-    if len(query.replace(' ', '')) < 2:
-        print("-> ❌ 검색어 길이가 너무 짧습니다. (공백 제외 2자 미만)")
+    """ 
+    검색어 유효성 검사:
+    1. 공백 제외 2글자 미만 차단
+    2. 의미 없는 자음/모음만 있는 경우 차단 (예: ㅇㅇ, ㅋㅋ)
+    3. 동일 문자 무한 반복 차단
+    """
+    clean_query = query.replace(' ', '')
+    
+    # 1. 길이 체크
+    if len(clean_query) < 2:
+        print(f"-> ❌ 검색어 '{query}' 차단: 길이가 너무 짧습니다.")
         return False
-    # ⚠️ [수정] 정규식 패턴이 일부 환경에서 오류를 일으킬 수 있어, Raw String으로 명시합니다.
-    repeated_pattern = re.compile(r'([가-힣a-zA-Z0-9])\1{3,}')
-    if repeated_pattern.search(query):
-        print("-> ❌ 동일한 문자가 4회 이상 반복되는 패턴을 포함하고 있습니다. (무의미한 검색어로 판단)")
+
+    # 2. [추가된 로직] 자음/모음만으로 구성된 경우 차단 (ㄱ-ㅎ, ㅏ-ㅣ)
+    # 정규식: 한글 자음/모음 범위에만 해당하는지 체크
+    if re.fullmatch(r'[ㄱ-ㅎㅏ-ㅣ]+', clean_query):
+        print(f"-> ❌ 검색어 '{query}' 차단: 자음/모음만으로 구성되었습니다.")
         return False
+        
+    # 3. 동일 문자 3회 이상 반복 체크 (aaa, 111 등)
+    # (단, 브랜드명일 수도 있으므로 한글은 제외하거나 기준을 완화할 수 있음)
+    repeated_pattern = re.compile(r'([^가-힣])\1{2,}') 
+    if repeated_pattern.search(clean_query):
+        print(f"-> ❌ 검색어 '{query}' 차단: 무의미한 문자 반복.")
+        return False
+        
     return True
 
-def is_brand_name(query, client_id, client_secret, confidence_threshold=0.6):
-    """ 네이버 쇼핑 API를 이용해 검색어가 브랜드명인지 교차 검증합니다. """
-    print(f"\n--- 0단계: '{query}'가 브랜드명인지 검증 시작 ---")
+def load_brand_whitelist():
+    """ static/brands.txt 파일에서 브랜드 목록을 읽어옵니다. """
+    whitelist = set() # 검색 속도가 빠른 set 자료구조 사용
+    
+    # 1. 파일 경로 찾기
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, 'static', 'brands.txt')
+    
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    brand = line.strip()
+                    if brand:
+                        # 소문자로 변환하고 공백 제거해서 저장 (비교 용이성)
+                        whitelist.add(brand.replace(" ", "").lower())
+            print(f"-> [화이트리스트] {len(whitelist)}개의 브랜드를 로드했습니다.")
+        except Exception as e:
+            print(f"-> [경고] 브랜드 파일 로드 실패: {e}")
+    else:
+        print("-> [경고] brands.txt 파일이 없습니다. 화이트리스트 기능이 제한됩니다.")
+        # 비상용 기본 리스트
+        basic_brands = ['삼성', '애플', '나이키', '다이소', '쿠팡', '카카오', '네이버']
+        for b in basic_brands:
+            whitelist.add(b)
+            
+    return whitelist
+
+BRAND_WHITELIST = load_brand_whitelist()
+
+def is_brand_name(query, client_id, client_secret, confidence_threshold=0.15):
+    """ 
+    네이버 쇼핑 API를 통해 검색어가 브랜드명인지 검증 
+    """
+    query_norm = query.replace(" ", "").lower()
+
+    # 1. 화이트리스트 체크
+    if query_norm in BRAND_WHITELIST:
+        print(f"-> [Pass] '{query}'는 화이트리스트 브랜드입니다.")
+        return True
+
+    # 2. API 검증
+    print(f"\n--- 0단계: '{query}' 브랜드 검증 (API) ---")
     url = "https://openapi.naver.com/v1/search/shop.json"
     headers = {
         "X-Naver-Client-Id": client_id,
         "X-Naver-Client-Secret": client_secret,
     }
-    params = {"query": query, "display": 20} 
+    # 정확도순(sim)으로 검색해서 연관성을 높임
+    params = {"query": query, "display": 40, "sort": "sim"}
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        data = response.json()
-        items = data.get("items", [])
+        items = response.json().get("items", [])
 
         if not items:
-            print("-> 쇼핑 검색 결과가 없어 브랜드명으로 판단할 수 없습니다.")
+            print("-> ❌ 쇼핑 검색 결과가 없습니다.")
             return False
 
-        brands = [item.get("brand") for item in items if item.get("brand")]
-        if not brands:
-            print("-> 검색 결과에서 브랜드명을 찾을 수 없습니다.")
+        brand_list = []
+        match_count = 0
+
+        for item in items:
+            brand = item.get("brand", "").strip()
+            # 브랜드 정보가 없으면 무시
+            if not brand: continue
+            
+            brand_list.append(brand)
+            brand_norm = brand.replace(" ", "").lower()
+
+            # 포함 관계 확인
+            if query_norm in brand_norm or brand_norm in query_norm:
+                match_count += 1
+
+        total_brands_found = len(brand_list)
+        
+        #  검색 결과는 있는데 '브랜드' 필드가 있는 상품이 하나도 없는 경우 (예: 중고장터 글 등)
+        if total_brands_found == 0:
+            print(f"-> ❌ 검색 결과는 있으나 등록된 브랜드 정보가 없습니다. (일반 명사일 가능성 높음)")
             return False
 
-        brands = [b.strip() for b in brands] # ⚠️ [추가] 브랜드명 앞뒤 공백 제거
-        
-        brand_counts = Counter(brands)
-        most_common_brand, count = brand_counts.most_common(1)[0]
-        dominance_ratio = count / len(brands)
-        
-        is_dominant = dominance_ratio >= confidence_threshold
-        # ⚠️ [수정] 검색어와 브랜드명을 비교할 때, 소문자화하여 정확한 비교를 수행합니다.
-        is_query_matched = most_common_brand.lower() == query.lower() 
+        ratio = match_count / total_brands_found
+        print(f"-> 검증 결과: 유효 상품 {total_brands_found}개 중 {match_count}개 일치 ({ratio:.1%})")
 
-        print(f"-> 가장 많이 노출된 브랜드: '{most_common_brand}' (비중: {dominance_ratio:.2%})")
-
-        if is_dominant and is_query_matched:
-            print(f"-> ✅ 브랜드명 일치 및 비중({dominance_ratio:.2%}) 통과.")
+        if ratio >= confidence_threshold:
             return True
         else:
-            reason = []
-            if not is_dominant:
-                reason.append(f"브랜드 비중({dominance_ratio:.2%})이 기준치({confidence_threshold:.0%}) 미만")
-            if not is_query_matched:
-                reason.append(f"가장 지배적인 브랜드('{most_common_brand}')가 검색어와 불일치")
+            # 최빈값 구제 로직
+            if brand_list:
+                most_common = Counter(brand_list).most_common(1)[0][0]
+                if query_norm in most_common.replace(" ", "").lower():
+                    print(f"-> ⚠️ 비율 미달이나 최빈 브랜드('{most_common}')와 일치하여 통과.")
+                    return True
             
-            print(f"-> ❌ 브랜드명으로 판단하기 어려움 ({', '.join(reason)}).")
+            print(f"-> ❌ 브랜드 검증 실패 (기준 미달)")
             return False
 
-    except requests.exceptions.RequestException as e:
-        # ⚠️ [수정] 오류 발생 시 500 에러를 반환해야 하므로, 함수를 종료합니다.
-        print(f"쇼핑 API 호출 중 오류 발생: {e}")
-        return False
-
-# ----------------------------------------------------
-# --- 데이터 수집 및 전처리 함수 ---
-# ----------------------------------------------------
+    except Exception as e:
+        print(f"브랜드 검증 API 오류: {e}")
+        # API 오류 시에는 억울하게 막히는 걸 방지하기 위해 일단 통과시키거나, 
+        # 엄격하게 하려면 False를 리턴합니다. (여기선 안전하게 True 유지)
+        return True
 
 def fetch_naver_search_results(query, api_type, client_id, client_secret, total_results):
-    """ Blog 또는 News 데이터를 수집합니다. """
-    print(f"\n--- 1단계: '{api_type.capitalize()}' 데이터 수집 시작 (최대 {total_results}건) ---")
+    if api_type == 'blog': url = "https://openapi.naver.com/v1/search/blog.json"
+    elif api_type == 'news': url = "https://openapi.naver.com/v1/search/news.json"
+    else: return pd.DataFrame()
 
-    if api_type == 'blog':
-        url_template = "https://openapi.naver.com/v1/search/blog.json"
-    elif api_type == 'news':
-        url_template = "https://openapi.naver.com/v1/search/news.json"
-    else:
-        return pd.DataFrame() 
-
-    # ⚠️ [수정] 최종 DF는 일관된 컬럼명을 가져야 합니다.
-    df_columns = ['title', 'link', 'description', 'channel_name', 'postdate', 'channel_type'] 
-    df = pd.DataFrame(columns=df_columns)
-    display = 100
+    df = pd.DataFrame(columns=['title', 'link', 'description', 'channel_name', 'postdate', 'channel_type'])
+    headers = {"X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret}
     remove_tag = re.compile('<.*?>')
-
-    for start in range(1, min(total_results, 1001) + 1, display): 
-        # ⚠️ [수정] query를 URL 인코딩하지 않아도 requests 라이브러리에서 자동으로 처리해줍니다.
-        url = url_template
-        headers = {
-            "X-Naver-Client-Id": client_id,
-            "X-Naver-Client-Secret": client_secret
-        }
-        params = {
-            "query": query,
-            "display": display,
-            "start": start
-        }
-
+    
+    for start in range(1, min(total_results, 1001) + 1, 100):
         try:
-            response = requests.get(url, headers=headers, params=params)
-            response.raise_for_status()
-            data = response.json()
-            items = data.get("items", [])
+            res = requests.get(url, headers=headers, params={"query": query, "display": 100, "start": start})
+            res.raise_for_status()
+            items = res.json().get("items", [])
+            if not items: break
             
-            if not items:
-                break
-
-            processed_items = []
+            processed = []
             for item in items:
-                clean_item = {}
-                clean_item['title'] = re.sub(remove_tag, '', item.get('title', ''))
-                clean_item['description'] = re.sub(remove_tag, '', item.get('description', ''))
-                clean_item['link'] = item.get('link', '') 
-                
-                # ⚠️ [수정] 채널명 및 날짜 처리 로직 통일
+                clean = {
+                    'title': re.sub(remove_tag, '', item.get('title', '')),
+                    'description': re.sub(remove_tag, '', item.get('description', '')),
+                    'link': item.get('link', ''),
+                    'channel_type': api_type
+                }
                 if api_type == 'blog':
-                    clean_item['channel_name'] = re.sub(remove_tag, '', item.get('bloggername', ''))
-                    raw_date = item.get('postdate', '')
-                    clean_item['postdate'] = pd.to_datetime(raw_date, format='%Y%m%d', errors='coerce').normalize() # YYYYMMDD 형식
-                elif api_type == 'news':
-                    clean_item['channel_name'] = item.get('publisher', '') 
-                    raw_date = item.get('pubDate', '')
-                    # RFC 822 형식 처리 (예: Wed, 25 Oct 2023 00:00:00 +0900)
-                    clean_item['postdate'] = pd.to_datetime(raw_date, format='%a, %d %b %Y %H:%M:%S +0900', errors='coerce').normalize()
-                    
-                clean_item['channel_type'] = api_type # 채널 타입 추가
-
-                processed_items.append(clean_item)
-
-            temp_df = pd.DataFrame(processed_items)
-            df = pd.concat([df, temp_df], ignore_index=True)
-
-        except requests.exceptions.RequestException as e:
-            print(f"{api_type.capitalize()} API 호출 중 오류 발생 (start={start}): {e}")
-            break 
-
-    df = df.dropna(subset=['postdate']).drop_duplicates()
-    df = df[df['postdate'] <= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)]
-    print(f"-> 총 {len(df)}건의 '{api_type.capitalize()}' 데이터를 수집했습니다.")
-    return df
-
+                    clean['channel_name'] = re.sub(remove_tag, '', item.get('bloggername', ''))
+                    clean['postdate'] = pd.to_datetime(item.get('postdate', ''), format='%Y%m%d', errors='coerce')
+                else:
+                    clean['channel_name'] = item.get('publisher', '')
+                    clean['postdate'] = pd.to_datetime(item.get('pubDate', ''), format='%a, %d %b %Y %H:%M:%S +0900', errors='coerce')
+                processed.append(clean)
+            
+            df = pd.concat([df, pd.DataFrame(processed)], ignore_index=True)
+        except: break
+        
+    df['postdate'] = df['postdate'].dt.normalize()
+    return df.dropna(subset=['postdate']).drop_duplicates()
 
 def get_search_trend(query, client_id, client_secret):
-    """ 네이버 데이터랩 API를 이용해 최근 1년간의 월간 검색량 추이를 가져옵니다. """
-    # ⚠️ [수정] 주간(90일) 대신 월간(365일) 트렌드를 가져오도록 수정했습니다.
-    print(f"\n--- 2단계: '{query}' 월간 검색량 추이 데이터 수집 시작 (최근 1년) ---")
-
     url = "https://openapi.naver.com/v1/datalab/search"
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') # 최근 1년
-
-    body = json.dumps({
-        "startDate": start_date,
-        "endDate": end_date,
-        "timeUnit": "month",  # ⚠️ [수정] 월간 단위 요청
-        "keywordGroups": [{"groupName": query, "keywords": [query]}]
-    })
     headers = {
-        "X-Naver-Client-Id": client_id,
-        "X-Naver-Client-Secret": client_secret,
+        "X-Naver-Client-Id": client_id, "X-Naver-Client-Secret": client_secret,
         "Content-Type": "application/json"
     }
-
+    body = json.dumps({
+        "startDate": (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d'),
+        "endDate": datetime.now().strftime('%Y-%m-%d'),
+        "timeUnit": "month",
+        "keywordGroups": [{"groupName": query, "keywords": [query]}]
+    })
     try:
-        response = requests.post(url, headers=headers, data=body)
-        response.raise_for_status()
-        data = response.json()
+        res = requests.post(url, headers=headers, data=body)
+        res.raise_for_status()
+        data = res.json()
+        if not data.get('results'): return pd.DataFrame(columns=['date', 'ratio'])
+        df = pd.DataFrame(data['results'][0]['data']).rename(columns={'period': 'date'})
+        df['date'] = pd.to_datetime(df['date'])
+        return df
+    except: return pd.DataFrame(columns=['date', 'ratio'])
 
-        if not data.get('results') or not data['results'][0].get('data'):
-             print("-> ❌ 데이터랩 API 응답에 유효한 데이터가 없습니다.")
-             return pd.DataFrame(columns=['date', 'ratio']) # ⚠️ [수정] 반환 컬럼명 통일
-
-        trend_df = pd.DataFrame(data['results'][0]['data'])
-        # ⚠️ [수정] 컬럼명을 'date', 'ratio'로 통일하여 교차 분석 함수에서 사용하기 쉽게 합니다.
-        trend_df = trend_df.rename(columns={'period': 'date', 'ratio': 'ratio'}) 
-        
-        trend_df['date'] = pd.to_datetime(trend_df['date']) 
-        
-        print(f"-> 최근 1년간의 월간 검색량 데이터를 수집했습니다. (총 {len(trend_df)}건)")
-        return trend_df[['date', 'ratio']]
-
-    except requests.exceptions.RequestException as e:
-        print(f"데이터랩 API 호출 중 오류 발생: {e}")
-        return pd.DataFrame(columns=['date', 'ratio'])
-    except Exception as e:
-        print(f"데이터랩 처리 중 예상치 못한 오류 발생: {e}")
-        return pd.DataFrame(columns=['date', 'ratio'])
-    
-# ----------------------------------------------------
-# --- 시각화 함수 (플롯 객체 생성) ---
-# ----------------------------------------------------
-
-# ⚠️ [수정] 이 함수 전체를 복사해서 기존 함수를 덮어쓰세요.
-
-def visualize_post_frequency(df, frequency_type='monthly'): 
-    """ 단일 통합 데이터프레임을 받아 월별 또는 주별 언급량 추이를 시각화하고 플롯 객체를 반환합니다. """
+# --- 시각화 함수들 ---
+def visualize_post_frequency(df, frequency_type='monthly'):
+    """ 
+    최대 기간(12개월/6개월)으로 그래프 X축을 고정하고, 
+    데이터가 없는 기간은 0으로 채워서 보여줍니다.
+    """
     time_unit = "월별" if frequency_type == 'monthly' else "주별"
-    time_span = "12개월" if frequency_type == 'monthly' else "6개월"
     color = 'darkorange' if frequency_type == 'monthly' else 'purple'
     
-    # ⚠️ [수정] 제목에서 "(현재 기간 제외)" 문구 삭제
-    print(f"\n--- 3단계 분석: {time_unit} 언급량 시각화 ({time_span}) ---")
+    print(f"\n--- 3단계 분석: {time_unit} 언급량 시각화 (기간 고정) ---")
     
     temp_df = df.copy()
-    
     try:
         temp_df['postdate'] = pd.to_datetime(temp_df['postdate'], errors='coerce').dt.normalize()
+        temp_df.dropna(subset=['postdate'], inplace=True)
     except Exception:
-        print(f"경고: 날짜 변환 중 오류 발생. 분석을 건너뜕니다.")
-        return None  # None 반환으로 통일
+        return None 
     
-    temp_df.dropna(subset=['postdate'], inplace=True)
-    if temp_df.empty:
-        print("경고: 유효한 날짜를 가진 게시물 데이터가 없어 분석을 건너뜕니다.")
-        return None
-        
+    if temp_df.empty: return None
+
     now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     
+    # 1. [기간 설정] 데이터 유무와 상관없이 12개월/6개월 전부터 시작
     if frequency_type == 'monthly':
-        
-        # ⚠️ [수정] 현재 월을 제외하는 필터를 제거하고, 모든 데이터를 사용합니다.
-        # df_filtered = temp_df[temp_df['postdate'] < current_month_start].copy() # <-- 기존 코드
-        df_filtered = temp_df.copy() # <-- 수정된 코드 (모든 데이터 사용)
-        
-        start_date_offset = pd.DateOffset(months=12)
-        freq_label = 'post_month'
-        freq_unit = 'MS'
-        
-        if not df_filtered.empty:
-            # 최근 12개월 데이터만 필터링 (최신 날짜 기준)
-            latest_date = df_filtered['postdate'].max()
-            # [추가] 혹시 모를 미래 날짜 데이터 방지를 위해 now로 상한선 적용
-            latest_date_cap = min(latest_date, now)
-            
-            # 12개월 전 데이터만 필터링
-            df_filtered = df_filtered[
-                (df_filtered['postdate'] >= (latest_date_cap - start_date_offset)) &
-                (df_filtered['postdate'] <= latest_date_cap) # ⚠️ [추가] 현재 날짜 상한선
-            ].copy()
-            
-            df_filtered[freq_label] = df_filtered['postdate'].dt.strftime('%Y-%m')
-            counts_raw = df_filtered[freq_label].value_counts().sort_index()
-            
-            if counts_raw.empty: # ⚠️ [추가] 필터링 후 비어있을 수 있음
-                 print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-                 return None
+        start_date = now - pd.DateOffset(months=12)
+        freq_code = 'MS'
+    else:
+        start_date = now - pd.DateOffset(months=6)
+        freq_code = 'W'
 
-            # 빈 월을 채우기 위한 전체 레이블 생성
-            start_month = counts_raw.index.min()
-            end_month = counts_raw.index.max()
-            
-            full_index_range = pd.date_range(start=start_month, end=end_month, freq=freq_unit)
-            full_labels = full_index_range.strftime('%Y-%m')
-            rotation_angle = 45
-        else:
-            print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-            return None # None 반환으로 통일
+    # 2. [필터링] 해당 기간 내 데이터만 추출
+    df_filtered = temp_df[(temp_df['postdate'] >= start_date) & (temp_df['postdate'] <= now)].copy()
+    
+    # 3. [전체 범위 생성] 빈 기간을 채우기 위한 날짜 인덱스
+    full_date_range = pd.date_range(start=start_date, end=now, freq=freq_code)
+    
+    if frequency_type == 'monthly':
+        # 월별 집계
+        df_filtered['period_dt'] = df_filtered['postdate'].dt.to_period('M').dt.to_timestamp()
+        counts_raw = df_filtered['period_dt'].value_counts().sort_index()
+        
+        # 빈 곳 0으로 채우기
+        full_counts = counts_raw.reindex(full_date_range, fill_value=0)
+        
+        # 라벨: YYYY-MM
+        full_counts.index = full_counts.index.strftime('%Y-%m')
+        rotation_angle = 45
 
     elif frequency_type == 'weekly':
-        # (주별 분석 로직은 로그상 정상 작동했으므로 그대로 둡니다)
-        current_week_start = (now - timedelta(days=now.weekday()))
+        # 주별 집계
+        df_resample = df_filtered.set_index('postdate')
+        counts_resampled = df_resample.resample('W').size()
         
-        df_filtered = temp_df[temp_df['postdate'] < current_week_start].copy()
-        start_date_offset = pd.DateOffset(months=6) 
-
-        if not df_filtered.empty:
-            latest_date = df_filtered['postdate'].max()
-            df_filtered = df_filtered[df_filtered['postdate'] >= (latest_date - start_date_offset)].copy()
+        # 빈 곳 0으로 채우기
+        full_counts = counts_resampled.reindex(full_date_range, fill_value=0)
+        
+        # 라벨: 0000년 0월 0주차
+        new_labels = []
+        for date in full_counts.index:
+            first_day = date.replace(day=1)
+            dom = date.day
+            adjusted_dom = dom + first_day.weekday()
+            w = int(np.ceil(adjusted_dom/7.0))
+            if w > 5: w = 5
+            new_labels.append(f"{date.year}년 {date.month}월 {w}주차")
             
-            if df_filtered.empty: # ⚠️ [추가] 필터링 후 비어있을 수 있음
-                print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-                return None
-
-            df_resample = df_filtered.set_index('postdate')
-            counts_resampled = df_resample.resample('W').size() 
-            
-            full_counts = counts_resampled
-            
-            full_counts.index = full_counts.index.strftime('%Y-%m-%d')
-            full_labels = full_counts.index.tolist() 
-            rotation_angle = 90
-        else:
-            print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-            return None 
-    
+        full_counts.index = new_labels
+        rotation_angle = 45
+        
     else:
         return None
 
-    # ⚠️ [수정] 'full_counts'가 정의되지 않았을 수 있으므로 locals() 체크 제거
-    # 'monthly'의 경우 full_counts가 여기서 정의되므로, counts_raw로 대신 체크
-    if frequency_type == 'monthly' and (not 'counts_raw' in locals() or counts_raw.empty): 
-        print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-        return None
-    elif frequency_type == 'weekly' and (not 'full_counts' in locals() or full_counts.empty):
-        print(f"경고: 필터링 결과 최근 {time_span} 이내의 유효한 게시물이 없어 {time_unit} 분석을 건너뜕니다.")
-        return None
+    if full_counts.empty: return None
 
-    if frequency_type == 'monthly':
-        counts_series = counts_raw.rename('count')
-        full_counts = counts_series.reindex(full_labels, fill_value=0)
-    
-    # 시각화 실행
-    # ⚠️ [수정] fig 변수에 플롯 객체를 할당
+    # 그래프 그리기
     fig = plt.figure(figsize=(15 if frequency_type == 'weekly' else 12, 6))
-    sns.lineplot(
-        x=full_counts.index, y=full_counts.values, marker='o', color=color
-    )
-
-    # ⚠️ [수정] 제목에서 "(현재 ... 제외)" 문구 삭제
-    plt.title(f'최근 {time_span} 언급량 추이', fontsize=16) 
+    sns.lineplot(x=full_counts.index, y=full_counts.values, marker='o', color=color)
+    
+    # 제목 설정
+    period_msg = "최근 12개월" if frequency_type == 'monthly' else "최근 6개월"
+    plt.title(f'{period_msg} 언급량 추이 ({time_unit})', fontsize=16)
     
     if frequency_type == 'weekly':
-        plt.xlabel(f'언급 {time_unit} (주차 종료일)', fontsize=12) 
+        plt.xlabel(f'언급 {time_unit} (주차)', fontsize=12) 
     else:
         plt.xlabel(f'언급 {time_unit}', fontsize=12) 
         
@@ -463,638 +414,317 @@ def visualize_post_frequency(df, frequency_type='monthly'):
     plt.tight_layout()
     
     print(f"-> 통합 데이터 {time_unit} 언급량 시각화 플롯 객체 생성 완료.")
-    
-    # ⚠️ [수정] fig 객체를 반환 (save_and_get_url 호환)
     return fig
 
 def visualize_combined_trend(total_df, trend_df):
-    """ 검색량(월간)과 언급량(월간)을 하나의 그래프에 시각화하고 플롯 객체를 반환합니다. """
-    print("\n--- 4단계 분석: 언급량 vs 검색량 통합 시각화 (최근 1년 월간 단위) ---")
-    
-    if trend_df.empty or 'date' not in trend_df.columns:
-        print("경고: 검색량(데이터랩) 데이터가 없거나 형식이 잘못되어 통합 분석을 건너뜁니다.")
-        return
-        
-    temp_df = total_df.copy()
-    
-    try:
-        temp_df['postdate'] = pd.to_datetime(temp_df['postdate'], errors='coerce').dt.normalize()
-        temp_df.dropna(subset=['postdate'], inplace=True)
-    except Exception:
-        return
-
-    temp_df['month_start_date'] = temp_df['postdate'].dt.to_period('M').apply(lambda x: x.start_time).dt.normalize() 
-    mention_counts = temp_df['month_start_date'].value_counts().reset_index()
+    if trend_df.empty: return None
+    temp = total_df.copy()
+    temp['month'] = temp['postdate'].dt.to_period('M').dt.to_timestamp()
+    mention_counts = temp['month'].value_counts().reset_index()
     mention_counts.columns = ['date', 'mention_count']
     
-    trend_df['date'] = trend_df['date'].dt.to_period('M').apply(lambda x: x.start_time).dt.normalize()
-    
-    start_date = trend_df['date'].min()
-    end_date = trend_df['date'].max()
-    mention_counts = mention_counts[
-        (mention_counts['date'] >= start_date) & (mention_counts['date'] <= end_date)
-    ]
-    
-    combined_df = pd.merge(trend_df, mention_counts, on='date', how='left').fillna(0)
-    
-    max_mention = combined_df['mention_count'].max()
-    combined_df['mention_ratio'] = (combined_df['mention_count'] / max_mention) * 100 if max_mention > 0 else 0.0
-    
-    # 시각화 (Dual Axis)
+    trend_df['date'] = trend_df['date'].dt.to_period('M').dt.to_timestamp()
+    combined = pd.merge(trend_df, mention_counts, on='date', how='left').fillna(0)
+    if combined.empty: return None
+    combined['mention_ratio'] = (combined['mention_count'] / combined['mention_count'].max() * 100) if combined['mention_count'].max() > 0 else 0
+
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    x_labels = combined_df['date'].dt.strftime('%Y-%m')
-
-    color = 'tab:red'
-    ax1.set_xlabel('월간 (시작일 기준)', fontsize=12)
-    ax1.set_ylabel('검색량 비율 (0-100) - Datalab 기준', color=color, fontsize=12)
-    sns.lineplot(x=combined_df.index, y='ratio', data=combined_df, marker='o', color=color, ax=ax1, label='검색량')
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.set_ylim(0, 100)
-    ax1.set_xticks(combined_df.index)
-    ax1.set_xticklabels(x_labels, rotation=45, ha='right')
-    ax1.legend(loc='upper left')
-
-    ax2 = ax1.twinx() 
-    color = 'tab:blue'
-    ax2.set_ylabel('언급량 비율 (0-100) - 자체 최대 언급량 기준', color=color, fontsize=12) 
-    sns.lineplot(x=combined_df.index, y='mention_ratio', data=combined_df, marker='s', color=color, ax=ax2, label='언급량')
-    ax2.tick_params(axis='y', labelcolor=color)
-    ax2.set_ylim(0, 100)
-    ax2.legend(loc='upper right')
-    
-    plt.title('최근 1년 월간 검색량 및 언급량 추이 비교 (0-100 비율)', fontsize=16)
+    sns.lineplot(x=combined.index, y=combined['ratio'], ax=ax1, color='tab:red', marker='o', label='검색량')
+    ax2 = ax1.twinx()
+    sns.lineplot(x=combined.index, y=combined['mention_ratio'], ax=ax2, color='tab:blue', marker='s', label='언급량')
+    plt.title('검색량 vs 언급량 교차 분석', fontsize=16)
+    ax1.set_xticks(range(len(combined)))
+    ax1.set_xticklabels(combined['date'].dt.strftime('%Y-%m'), rotation=45)
     fig.tight_layout()
-    print("-> 검색량 및 언급량 통합 시각화 플롯 객체 생성 완료.")
-    return plt
+    return fig
 
-def visualize_sentiment_word_clouds(df, positive_words, negative_words):
-    """ 감성 사전 기반 긍정/부정 워드 클라우드 플롯 객체와 상위 7개 키워드 DF를 반환합니다. """
-    print("\n--- 5단계 분석: 감성 사전 기반 긍정/부정 및 통합 키워드 분석 시작 ---")
-    
-    if df.empty or 'description' not in df.columns:
-        return (None, None, None, pd.DataFrame())
-
+def visualize_sentiment_word_clouds(df, pos_words, neg_words):
+    if df.empty: return None, None, None, pd.DataFrame()
     text = ' '.join(df['description'].astype(str).tolist())
-    cleaned_text = re.sub('[^가-힣\s]', '', text).lower()
+    cleaned = re.sub('[^가-힣\s]', '', text).lower()
     
-    def get_word_counts(word_list, text_corpus, max_words=20):
-        counts = {}
-        for word in word_list:
-            count = len(re.findall(r'\b' + re.escape(word) + r'\b', text_corpus)) 
-            if count > 0:
-                counts[word] = count
-        return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True)[:max_words])
-    
-    def create_wordcloud_plot(counts, title, colormap):
-        if not counts:
-            return None
-
-        wc = WordCloud(
-            font_path=FONT_PATH, width=800, height=400, background_color='white',
-            max_words=20, colormap=colormap, prefer_horizontal=0.9, collocations=False 
-        )
-        wordcloud = wc.generate_from_frequencies(counts)
-        
-        fig = plt.figure(figsize=(12, 7)) 
-        plt.imshow(wordcloud, interpolation='bilinear')
-        plt.axis('off') 
+    def make_wc(words, title, cmap):
+        counts = {w: len(re.findall(rf'\b{w}\b', cleaned)) for w in words}
+        counts = {k: v for k, v in counts.items() if v > 0}
+        if not counts: return None
+        wc = WordCloud(font_path=FONT_PATH, width=800, height=400, background_color='white', colormap=cmap)
+        wc.generate_from_frequencies(counts)
+        fig = plt.figure(figsize=(12, 7))
+        plt.imshow(wc, interpolation='bilinear')
+        plt.axis('off')
         plt.title(title, fontsize=16)
-        plt.tight_layout(pad=3.0) 
-        
+        plt.tight_layout()
         return fig
 
-    pos_counts = get_word_counts(positive_words, cleaned_text, max_words=20)
-    pos_plot = create_wordcloud_plot(pos_counts, '긍정 감성 키워드 태그 클라우드 (Top 20)', 'YlGn')
+    pos_fig = make_wc(pos_words, '긍정 키워드', 'YlGn')
+    neg_fig = make_wc(neg_words, '부정 키워드', 'Reds_r')
     
-    neg_counts = get_word_counts(negative_words, cleaned_text, max_words=20)
-    neg_plot = create_wordcloud_plot(neg_counts, '부정 감성 키워드 태그 클라우드 (Top 20)', 'Reds_r')
-
-    ALL_SENTIMENT_WORDS = positive_words + negative_words
-    all_counts_top20 = get_word_counts(ALL_SENTIMENT_WORDS, cleaned_text, max_words=20)
-    all_plot = create_wordcloud_plot(all_counts_top20, '긍정+부정 통합 키워드 태그 클라우드 (Top 20)', 'plasma')
+    # 통합 키워드 및 상위 리스트
+    all_counts = {w: len(re.findall(rf'\b{w}\b', cleaned)) for w in pos_words + neg_words}
+    all_counts = dict(sorted(all_counts.items(), key=lambda x: x[1], reverse=True)[:20])
+    all_fig = make_wc(list(all_counts.keys()), '통합 키워드', 'plasma')
     
-    # 상위 20개 키워드를 반환하도록 변경
-    all_counts_top20_selected = {k: all_counts_top20[k] for k in list(all_counts_top20.keys())[:min(20, len(all_counts_top20))]}
-    all_df = pd.DataFrame(all_counts_top20_selected.items(), columns=['키워드', '언급 횟수'])
-    
-    print("-> 감성 사전 기반 워드클라우드 플롯 객체 생성 및 상위 키워드 분석 완료.")
-    return pos_plot, neg_plot, all_plot, all_df
+    top_k = pd.DataFrame(all_counts.items(), columns=['키워드', '언급 횟수']) if all_counts else pd.DataFrame()
+    return pos_fig, neg_fig, all_fig, top_k
 
 def visualize_competitor_mention_comparison(own_query, own_df, competitor_query, competitor_df):
-    """ 자사/경쟁사 월별 언급량을 비교하여 시각화하고 플롯 객체를 반환합니다. """
-    print(f"\n--- 9단계 분석: 자사({own_query}) vs 경쟁사({competitor_query}) 월별 언급량 비교 시각화 시작 ---")
+    """ 
+    자사 vs 경쟁사 월별 언급량을 비교합니다.
+    (최근 12개월 고정, 빈 달은 0으로 채움, 날짜 오름차순 정렬 보장)
+    """
+    print(f"\n--- 9단계 분석: 자사({own_query}) vs 경쟁사({competitor_query}) 월별 언급량 비교 ---")
 
+    # 둘 다 데이터가 없으면 그릴 수 없음
     if own_df.empty and competitor_df.empty:
-        print("경고: 자사와 경쟁사 모두 유효한 데이터가 없어 비교 분석을 건너뜁니다.")
+        print("경고: 비교할 데이터가 없어 건너뜁니다.")
         return None
 
-    def prepare_monthly_counts(df, label):
+    # 1. 기준 기간 설정 (최근 12개월)
+    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = now - pd.DateOffset(months=12)
+    
+    # 2. 완전한 날짜 인덱스 생성 (이게 있어야 순서가 안 섞이고 0으로 채워짐)
+    full_date_range = pd.date_range(start=start_date, end=now, freq='MS')
+
+    # 내부 집계 함수
+    def get_monthly_counts(df):
         temp_df = df.copy()
-        if temp_df.empty: return pd.Series([], dtype='int64', name=label)
+        if temp_df.empty: 
+            return pd.Series(0, index=full_date_range) # 데이터 없으면 0으로 꽉 채운 시리즈 반환
+        
         try:
             temp_df['postdate'] = pd.to_datetime(temp_df['postdate'], errors='coerce').dt.normalize()
             temp_df.dropna(subset=['postdate'], inplace=True)
             
-            now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            current_month_start = now.replace(day=1)
-            start_date_offset = pd.DateOffset(months=12)
+            # 기간 내 데이터 필터링
+            mask = (temp_df['postdate'] >= start_date) & (temp_df['postdate'] <= now)
+            filtered = temp_df[mask]
             
-            df_filtered = temp_df[temp_df['postdate'] < current_month_start].copy()
-            if df_filtered.empty: return pd.Series([], dtype='int64', name=label)
-                 
-            latest_date = df_filtered['postdate'].max()
-            df_filtered = df_filtered[df_filtered['postdate'] >= (latest_date - start_date_offset)].copy()
+            # 월별 리샘플링 (MS: Month Start)
+            # set_index -> resample -> size 과정을 거치면 날짜순으로 자동 정렬됨
+            counts = filtered.set_index('postdate').resample('MS').size()
             
-            df_filtered['post_month'] = df_filtered['postdate'].dt.strftime('%Y-%m')
-            counts = df_filtered['post_month'].value_counts().sort_index().rename(label)
-            return counts
+            # 빈 달을 0으로 채우기 (Reindex)
+            return counts.reindex(full_date_range, fill_value=0)
+            
         except Exception as e:
-            print(f"경고: {label} 데이터 전처리 중 오류 발생. {e}")
-            return pd.Series([], dtype='int64', name=label)
+            print(f"데이터 집계 중 오류: {e}")
+            return pd.Series(0, index=full_date_range)
 
-    own_counts = prepare_monthly_counts(own_df, own_query)
-    comp_counts = prepare_monthly_counts(competitor_df, competitor_query)
-    combined_counts = pd.concat([own_counts, comp_counts], axis=1).fillna(0)
-    combined_counts.index.name = 'Month'
+    # 3. 자사/경쟁사 데이터 집계
+    own_counts = get_monthly_counts(own_df)
+    comp_counts = get_monthly_counts(competitor_df)
     
-    if combined_counts.shape[0] < 2:
-        print("경고: 비교할 월 데이터가 부족합니다. (최소 2개월 필요)")
-        return None
+    # 4. 데이터프레임 통합
+    combined = pd.DataFrame({
+        own_query: own_counts,
+        competitor_query: comp_counts
+    })
+    
+    # 5. 그래프 그리기 (Figure 객체 생성)
+    fig = plt.figure(figsize=(10, 5))
+    
+    # X축 라벨을 보기 좋게 변환 (YYYY-MM)
+    x_labels = combined.index.strftime('%Y-%m')
 
-    plt.figure(figsize=(10, 5))
-    sns.lineplot(x=combined_counts.index, y=own_query, data=combined_counts, marker='o', color='tab:blue', label=own_query)
-    sns.lineplot(x=combined_counts.index, y=competitor_query, data=combined_counts, marker='s', color='tab:red', label=competitor_query)
+    # 라인 그래프 그리기
+    sns.lineplot(data=combined, markers=True, dashes=False)
 
-    plt.title(f'{own_query} vs {competitor_query} 월별 언급량 추이 비교 (최근 12개월)', fontsize=14) 
+    plt.title(f'{own_query} vs {competitor_query} 월별 언급량 비교 (최근 12개월)', fontsize=14) 
     plt.xlabel('월', fontsize=11) 
     plt.ylabel('총 언급량', fontsize=11)
-    plt.xticks(combined_counts.index, rotation=45) 
+    
+    # X축 설정 (정렬된 날짜 인덱스 사용)
+    plt.xticks(ticks=combined.index, labels=x_labels, rotation=45) 
+    
     plt.legend(fontsize=11)
     plt.grid(axis='y', linestyle='--')
-    plt.subplots_adjust(left=0.12, right=0.92, top=0.92, bottom=0.15)
+    plt.tight_layout()
     
     print("-> 자사/경쟁사 언급량 비교 시각화 플롯 객체 생성 완료.")
-    return plt
+    return fig
 
-def generate_smart_report(query, total_mentions, sentiment_label, positive_score, top_keywords, outbreak_weeks, trend_available, most_frequent_date, mention_change_rate, api_key):
-    """
-    Gemini API 호출 중 5초마다 진행 상황을 알려줍니다.
-    모든 분석 지표(6가지 핵심 요소)를 종합하여 심층 리포트를 생성합니다.
-    """
+# --- AI 리포트 생성 ---
+def generate_smart_report(query, total, sent_label, pos_score, keywords, outbreak, trend_ok, freq_date, change_rate, api_key):
+    key_str = ", ".join([k['키워드'] for k in keywords[:5]]) if keywords else "없음"
+    outbreak_text = f"{outbreak[0]}" if outbreak else "없음"
     
-    # 1. 데이터 전처리 및 텍스트화
-    keywords_str = ", ".join([k['키워드'] for k in top_keywords[:5]]) if top_keywords else "데이터 부족"
-    
-    # 이슈 확산 포인트 텍스트화
-    outbreak_text = "특이한 급증 구간 없음"
-    if outbreak_weeks:
-        outbreak_text = f"{outbreak_weeks[0]} (검색량 급증 감지)"
-
-    # 2. 강력해진 프롬프트 구성 (6가지 요소 반영)
     prompt = f"""
-    당신은 수석 데이터 분석가입니다. 아래 제공된 [종합 분석 데이터]를 바탕으로 '{query}' 브랜드에 대한 심층 인사이트 보고서를 작성하세요.
+        당신은 '검색량(관심도)'과 '언급량(버즈량)'의 상관관계를 분석하는 브랜드 평판 전문가입니다.
+        제공된 데이터를 바탕으로 '{query}' 브랜드의 현황을 진단하고, 논리적인 마케팅 솔루션을 제시하세요.
 
-    📊 [종합 분석 데이터]
-    1. 이슈 확산 포인트 (Outbreak): {outbreak_text}
-    2. 최다 언급량 일자 (Peak Date): {most_frequent_date}
-    3. 언급량 증감률 (Growth Rate): {mention_change_rate} (최근 30일 기준)
-    4. 브랜드 감성 분석 (Sentiment): {sentiment_label} (긍정 {positive_score}%, 부정/중립 {100 - positive_score}%)
-    5. 트렌드 언급 단어 (Keywords): {keywords_str}
-    6. 총 언급량 (Total Volume): {total_mentions}건
+        📊 [데이터 개요]
+        - 총 언급량(Buzz): {total}건 (시장의 반응 크기)
+        - 언급량 증감률: {change_rate} (최근 추세)
+        - 최다 언급일: {freq_date}
+        - 이슈 확산 포인트: {outbreak_text} (검색량 급증 시점)
+        - 여론 감성: {sent_label} (긍정 {pos_score}%)
+        - 핵심 키워드: {key_str}
 
-    📝 [작성 가이드]
-    위 6가지 데이터를 유기적으로 연결하여 500자 내외로 작성하되, 다음 4가지 섹션을 반드시 포함하세요.
-    배경 지식이나 외부 정보는 절대 사용하지 마세요.
+        📝 [작성 가이드 (500자 내외, 개조식)]
+        아래 4가지 목차에 맞춰 분석하되, 단순 수치 나열이 아닌 '인사이트' 위주로 작성하세요.
 
-    1. 📈 [검색량-언급량 교차 분석]
-       - '이슈 확산 포인트'와 '언급량 증감률', '최다 언급일'의 관계를 분석하세요.
-       - 예: 검색량이 급증하면서 실제 언급량도 폭발적으로 늘었는지, 아니면 검색만 늘고 언급은 없는지 진단.
+        1. 🔍 [관심도-확산성 교차 분석]
+        - '이슈 확산(검색량 급증)'과 '총 언급량'의 관계를 분석하여 현재 단계를 정의하세요.
+        - (예: 검색량이 선행하고 언급량이 따라오는 '상승기'인지, 검색 없이 언급만 많은 '바이럴 단계'인지 진단)
 
-    2. 🗣️ [여론 및 감성 진단]
-       - 긍정 비율({positive_score}%)과 '{sentiment_label}' 판정을 기반으로 소비자의 신뢰도를 평가하세요.
-       - 긍정이 높다면 브랜드 파워를, 낮다면 리스크 요인을 구체적으로 언급하세요.
+        2. 🗣️ [여론의 질적 진단]
+        - 긍정 여론({pos_score}%)의 구체적인 성격을 키워드와 연관 지어 해석하세요.
+        - 단순한 호감인지, 구매로 이어지는 신뢰인지, 혹은 부정적 이슈 방어인지 분석하세요.
 
-    3. 🔑 [트렌드 키워드 맥락 분석]
-       - 도출된 상위 키워드({keywords_str})들이 왜 나왔는지, 감성/언급량 데이터와 연결 지어 해석하세요.
+        3. 🔑 [트렌드 맥락(Context)]
+        - 도출된 키워드({key_str})들이 왜 이 시점에 등장했는지, 소비자의 어떤 니즈(Needs)를 반영하는지 설명하세요.
 
-    4. 💡 [전문가 전략 제언]
-       - 위 분석을 종합하여 마케팅 또는 리스크 관리 차원의 구체적인 행동 전략을 한 줄로 제안하세요.
-    """
-
-    # 3. Gemini API 호출 (스레드 알림 기능 포함)
-    print("\n--- 🧠 Gemini 2.5 AI 심층 리포트 요청 시작... ---")
-    
+        4. 💡 [Actionable Strategy]
+        - 위 분석을 종합하여 구체적인 행동 전략을 한 문장으로 제안하세요.
+        - (High Search/Low Mention일 경우 -> "정보성 콘텐츠 보강으로 구매 전환 유도")
+        - (Low Search/High Mention일 경우 -> "이벤트성 거품 주의 및 브랜드 진정성 강화")
+        """
     if api_key:
-        # 5초 알림 스레드 함수
-        def print_loading_status(stop_event):
-            elapsed = 0
-            while not stop_event.is_set():
-                time.sleep(5)
-                elapsed += 5
-                if not stop_event.is_set():
-                    print(f"   ... {elapsed}초 경과: AI가 6가지 지표를 교차 분석 중입니다 📊")
-
-        stop_loading = threading.Event()
-        loader_thread = threading.Thread(target=print_loading_status, args=(stop_loading,))
-        loader_thread.daemon = True 
-
         try:
-            loader_thread.start()
-            
-            # 모델명: 2.5-pro (안되면 1.5-pro 사용)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
-            
-            headers = {'Content-Type': 'application/json'}
-            payload = {"contents": [{"parts": [{"text": prompt}]}]}
-            
-            response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
-            
-            stop_loading.set()
-            loader_thread.join() 
-            
-            if response.status_code == 200:
-                result = response.json()
-                try:
-                    ai_text = result['candidates'][0]['content']['parts'][0]['text']
-                    print("-> ✅ AI 심층 리포트 생성 성공!")
-                    return markdown.markdown(ai_text)
-                except (KeyError, IndexError):
-                    print(f"-> ⚠️ 응답 형식 오류: {result}")
-            else:
-                print(f"-> ⚠️ AI 요청 실패 (상태 코드: {response.status_code})")
-                if response.status_code == 404:
-                     print("-> 힌트: 'gemini-2.5-pro' 모델을 찾을 수 없습니다. URL을 'gemini-1.5-pro'로 변경해 보세요.")
-                
-        except Exception as e:
-            stop_loading.set()
-            print(f"-> ⚠️ AI 연결 오류: {e}")
-    else:
-        print("-> ⚠️ API 키가 없습니다.")
+            res = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps({"contents": [{"parts": [{"text": prompt}]}]}))
+            if res.status_code == 200: return markdown.markdown(res.json()['candidates'][0]['content']['parts'][0]['text'])
+        except: pass
+    return markdown.markdown(f"### 분석 요약\n- 총 언급량: {total}건\n- 감성: {sent_label}\n- 주요 키워드: {key_str}")
 
-    # 4. [안전장치] 실패 시 규칙 기반 리포트 (Fallback)
-    print("-> 🔄 규칙 기반 리포트로 대체합니다.")
+# --- 헬퍼 함수들 ---
+def get_month_week(date_obj):
+    """ 
+    날짜(date_obj)를 받아서 해당 월의 몇 번째 주인지 계산합니다.
+    (최대 5주차까지만 나오도록 보정)
+    """
+    # 매월 1일 찾기
+    first_day = date_obj.replace(day=1)
     
-    fallback_report = f"📈 [교차 분석]: '{query}'의 언급량은 총 {total_mentions}건이며, 최근 증감률은 {mention_change_rate}입니다. 최다 언급일은 {most_frequent_date}입니다.\n\n"
-    fallback_report += f"🗣️ [여론]: 긍정 비율 {positive_score}%로 '{sentiment_label}' 성향을 보입니다.\n\n"
-    fallback_report += f"🔑 [키워드]: 주요 트렌드 단어는 '{keywords_str}' 입니다.\n\n"
-    fallback_report += "💡 [제언]: 상세 데이터 확인 후 마케팅 전략 수립이 필요합니다."
+    # 날짜(일) + 1일의 요일 인덱스(월=0, 일=6)를 더해서 주차 계산
+    dom = date_obj.day
+    adjusted_dom = dom + first_day.weekday()
     
-    return markdown.markdown(fallback_report)
+    # 올림 처리하여 주차 계산
+    week_num = int(np.ceil(adjusted_dom/7.0))
+    
+    # 6주차가 나오면 5주차로 강제 편입
+    if week_num > 5: 
+        return 5
+    return week_num
 
-# ----------------------------------------------------
-# --- 핵심 분석 함수 (지표 계산 및 감성 분석) ---
-# ----------------------------------------------------
-
-def get_month_week_from_iso(year, iso_week_number):
-    # (생략: date_obj, month, first_monday_of_month_week 계산 로직은 이전과 동일)
-    try:
-        # ISO 주차의 월요일 날짜를 정확히 구합니다.
-        date_str = f'{year}-{iso_week_number}-1' 
-        date_obj = datetime.strptime(date_str, '%G-%V-%u')
-    except ValueError:
-        date_obj = datetime(year, 1, 1) + timedelta(weeks=iso_week_number - 1, days=1)
-
-    month = date_obj.month
+def find_outbreak_weeks(trend_df, change_threshold=0.3):
+    if trend_df.empty: return []
     
-    first_day_of_month = date_obj.replace(day=1)
-    first_monday_of_month_week = first_day_of_month - timedelta(days=first_day_of_month.weekday())
-
-    time_difference = date_obj - first_monday_of_month_week
+    filtered = trend_df.sort_values('date')
     
-    week_of_month = time_difference.days // 7 + 1
+    # 에러 방지: 문자열을 숫자로 변환
+    filtered['ratio'] = pd.to_numeric(filtered['ratio'], errors='coerce')
     
-    # ⚠️ 안정성 강화: 만약 계산된 주차가 다음 달로 넘어간 경우, 
-    # 즉, date_obj가 다음 달의 날짜를 가리킨다면, 해당 월의 주차를 5주차로 고정합니다. 
-    # (다만, 이 로직은 ISO 주차를 쓰므로 date_obj.month는 정확해야 함)
+    # 변화율(pct_change) 계산
+    filtered['change'] = filtered['ratio'].pct_change()
     
-    # 🌟🌟🌟 디버깅을 위해 주차 계산 전후의 정보를 출력합니다.
-    print(f"DEBUG: Date={date_obj.strftime('%Y-%m-%d')}, Month={month}, Calculated Week={week_of_month}")
-
-    # 계산된 주차의 마지막 날짜가 다음 달로 넘어갔는지 확인하는 로직 (선택 사항)
-    # 현재는 date_obj.month가 정확하므로, 이 부분이 문제의 근본 원인은 아닐 가능성이 높습니다.
-    # if (week_of_month == 5 or week_of_month == 6) and date_obj.month != month:
-    #     week_of_month = 1 # 이 경우는 다음 달의 1주차가 되어야 함 (그러나 date_obj.month가 이미 다음 달이 되었어야 함)
+    # 급증한 구간(threshold 초과) 찾기
+    outbreak = filtered[filtered['change'] > change_threshold]
     
-    return month, week_of_month
-
-
-
-def find_outbreak_weeks(trend_df, change_threshold=5.0):
-    """ 주간 검색량 비율을 기준으로 전주 대비 검색량이 급증한 주간을 찾습니다. """
-    print(f"\n--- 6단계 분석: 이슈 확산 주간 추출 시작 (전주 대비 {change_threshold * 100:.0f}% 초과 증가 기준) ---")
-    
-    if trend_df.empty or 'date' not in trend_df.columns:
-        print("-> ❌ 검색량(데이터랩) 데이터가 없어 확산 주간 분석을 건너뜁니다.")
-        return []
-
-    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # date 컬럼을 datetime으로 변환 (안정성 확보)
-    if not pd.api.types.is_datetime64_any_dtype(trend_df['date']):
-        try:
-            trend_df['date'] = pd.to_datetime(trend_df['date'])
-        except Exception:
-            print("-> ❌ 'date' 컬럼을 datetime 형식으로 변환할 수 없습니다.")
-            return []
-            
-    filtered_trend_df = trend_df[trend_df['date'] < now].copy()
-    filtered_trend_df = filtered_trend_df.sort_values(by='date')
-    
-    if filtered_trend_df.empty:
-        print("-> ❌ 유효한 과거 주간 데이터가 없어 확산 주간 분석을 건너뜁니다.")
-        return []
-
-    filtered_trend_df['ratio'] = pd.to_numeric(filtered_trend_df['ratio'], errors='coerce')
-    filtered_trend_df.dropna(subset=['ratio'], inplace=True)
-    filtered_trend_df['prev_ratio'] = filtered_trend_df['ratio'].shift(1).fillna(0)
-    
-    filtered_trend_df['change_rate'] = filtered_trend_df.apply(
-        lambda row: (row['ratio'] - row['prev_ratio']) / row['prev_ratio']  
-                      if row['prev_ratio'] > 0 else (100.0 if row['ratio'] > 0 else 0),  
-        axis=1
-    )
-    
-    outbreak_weeks_df = filtered_trend_df[
-        ((filtered_trend_df['prev_ratio'] > 0) & (filtered_trend_df['change_rate'] > change_threshold)) |  
-        ((filtered_trend_df['prev_ratio'] == 0) & (filtered_trend_df['ratio'] > 0))
-    ].copy()
-    
-    outbreak_results = []
-    if not outbreak_weeks_df.empty:
-        outbreak_weeks_df = outbreak_weeks_df.sort_values(by='ratio', ascending=False)
+    results = []
+    for _, row in outbreak.iterrows():
+        m = row['date'].month
+        w = get_month_week(row['date']) 
         
-        for _, row in outbreak_weeks_df.iterrows():
-            date_obj = row['date']
-            year = date_obj.year
-            
-            # ISO 연간 주차를 추출합니다.
-            iso_calendar = date_obj.isocalendar()
-            iso_week_number = iso_calendar[1] 
-
-            # 수정된 헬퍼 함수를 사용하여 정확한 월과 월별 주차를 얻습니다.
-            month, week_of_month = get_month_week_from_iso(year, iso_week_number)
-            
-            # 포맷팅: 년/월/주차 형식 (예: 2025년 11월 4주차)
-            date_with_week = f"{year}년 {month:02d}월 {week_of_month}주차"  
-            
-            outbreak_results.append(date_with_week)  
-            
-        print(f"-> ✅ 총 {len(outbreak_results)}개의 검색량 급증 주간을 찾았습니다.")
+        results.append(f"{row['date'].year}년 {m}월 {w}주차")
         
-    return outbreak_results
+    return results
 
-def calculate_lexicon_score(text_corpus):
-    """ 감성 사전을 기반으로 긍정성 지수를 계산합니다. """
-    print("\n--- 7단계 분석: 순수 Python 감성 사전을 이용한 감성 분석 시작 ---")
-    
-    cleaned_text = re.sub('[^가-힣\s]', '', text_corpus).lower()
-    pos_count = sum(len(re.findall(r'\b' + re.escape(word) + r'\b', cleaned_text)) for word in POSITIVE_WORDS)
-    neg_count = sum(len(re.findall(r'\b' + re.escape(word) + r'\b', cleaned_text)) for word in NEGATIVE_WORDS)
+def calculate_lexicon_score(text):
+    cleaned = re.sub('[^가-힣\s]', '', text).lower()
+    pos = sum(len(re.findall(rf'\b{w}\b', cleaned)) for w in POSITIVE_WORDS)
+    neg = sum(len(re.findall(rf'\b{w}\b', cleaned)) for w in NEGATIVE_WORDS)
+    return (pos / (pos + neg) * 100) if (pos + neg) > 0 else 50.0
 
-    total_sentiment_count = pos_count + neg_count
-
-    if total_sentiment_count == 0:
-        print("-> 감성 단어가 텍스트에서 발견되지 않아 중립 처리됩니다.")
-        return 50.0
-
-    positive_score = (pos_count / total_sentiment_count) * 100
-    
-    print(f"-> 긍정 단어: {pos_count}회, 부정 단어: {neg_count}회")
-    print(f"-> 계산된 긍정성 지수: {positive_score:.2f}%")
-    
-    return positive_score
-
-def classify_sentiment(positive_score):
-    """ 사용자 지정 규칙에 따라 최종 감성을 분류합니다. """
-    if positive_score > 60:
-        return f"🟢 긍정 ({positive_score:.1f}%)"
-    else: 
-        return f"🔴 부정 ({positive_score:.1f}%)"
+def classify_sentiment(score):
+    return f"🟢 긍정" if score > 60 else f"🔴 부정"
 
 def calculate_key_metrics(df):
-    """ 최다 언급량 날짜와 언급량 증감률(최근 30일 vs 이전 30일)을 계산합니다. """
-    default_date = 'N/A'
-    default_rate = 'N/A'
-    
-    temp_df = df.copy()
-    print("\n--- 8단계 분석: 최다 언급 날짜 및 증감률 계산 시작 ---")
-    
-    try:
-        temp_df['postdate'] = pd.to_datetime(temp_df['postdate'], errors='coerce').dt.normalize()
-        temp_df.dropna(subset=['postdate'], inplace=True)
-    except Exception as e:
-        print(f"-> ❌ 언급량 분석: 날짜 변환 실패. {e}")
-        return default_date, default_rate
+    if df.empty: return 'N/A', 'N/A'
+    most_freq = df['postdate'].mode()[0].strftime('%Y-%m-%d')
+    d1 = df[(df['postdate'] >= datetime.now() - timedelta(30))].shape[0]
+    d2 = df[(df['postdate'] >= datetime.now() - timedelta(60)) & (df['postdate'] < datetime.now() - timedelta(30))].shape[0]
+    rate = f"{((d1-d2)/d2)*100:+.1f}%" if d2 > 0 else "0.0%"
+    return most_freq, rate
 
-    if temp_df.empty: return default_date, default_rate
-
-    # 1. 최다 언급량 날짜
-    daily_counts = temp_df['postdate'].dt.normalize().value_counts()
-    most_frequent_date = default_date
-    if not daily_counts.empty:
-        max_count = daily_counts.max()
-        most_frequent_date = daily_counts[daily_counts == max_count].index.max().strftime('%Y-%m-%d')
-        print(f"-> 최다 언급량 날짜: {most_frequent_date} ({max_count}회)")
-
-    # 2. 언급량 증감률
-    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    start_d1, end_d1 = now - timedelta(days=30), now 
-    start_d2, end_d2 = now - timedelta(days=60), now - timedelta(days=30)
-
-    mentions_d1 = temp_df[(temp_df['postdate'].dt.normalize() >= start_d1) & (temp_df['postdate'].dt.normalize() < end_d1)].shape[0]
-    mentions_d2 = temp_df[(temp_df['postdate'].dt.normalize() >= start_d2) & (temp_df['postdate'].dt.normalize() < end_d2)].shape[0]
-
-    mention_change_rate = default_rate
-
-    if mentions_d2 > 0:
-        change_rate = ((mentions_d1 - mentions_d2) / mentions_d2) * 100
-        mention_change_rate = f"{change_rate:+.1f}%" 
-    elif mentions_d1 > 0:
-        mention_change_rate = "+100% (신규)"
-    else:
-        mention_change_rate = "0.0%"
-
-    print(f"-> 증감률 분석: 최근 30일({mentions_d1}건) vs 이전 30일({mentions_d2}건). 증감률: {mention_change_rate}")
-    return most_frequent_date, mention_change_rate
-
-
-# ----------------------------------------------------
-# --- 메인 실행 함수 (Flask API 엔드포인트에 사용) ---
-# ----------------------------------------------------
-
-def run_full_analysis(search_query: str, competitor_query: str, client_id: str, client_secret: str, max_results: int, static_folder: str) -> dict:
-    """
-    브랜드 평판 분석의 전체 파이프라인을 실행하고 결과를 JSON 응답용 딕셔너리로 반환합니다.
-    """
-    
-    analysis_results = {
-        "query": search_query,
-        "competitor_query": competitor_query,
-        "status": "FAILURE",
-        "message": "분석 실패: 알 수 없는 오류",
-        "key_metrics": {},
-        "sentiment_analysis": {},
-        "trend_analysis": {},
-        "visualization_urls": {}
+# ==================================================================
+# [3] 메인 실행 함수 (Flask 호출용)
+# ==================================================================
+def run_full_analysis(search_query, competitor_query, client_id, client_secret, max_results, static_folder):
+    results = {
+        "query": search_query, "competitor_query": competitor_query,
+        "status": "FAILURE", "message": "오류", "visualization_urls": {}
     }
 
-    # 1. 유효성 검증
     if not is_valid_query(search_query):
-        analysis_results["message"] = "자사 검색어 유효성 검증에 실패하여 분석을 종료합니다."
-        return analysis_results
-    
-    # 브랜드명 검증 (경쟁사 분석일 때는 스킵)
-    if not competitor_query:
-        if not is_brand_name(search_query, client_id, client_secret):
-            analysis_results["message"] = "브랜드명 검증에 실패하여 분석을 종료합니다."
-            return analysis_results
-    
-    is_comp_valid = competitor_query and is_valid_query(competitor_query)
+        results["message"] = "검색어 오류"
+        return results
 
-    print("\n==================================================")
-    print("✅ 데이터 수집 및 분석을 시작합니다.")
-    print("==================================================")
-    
-    # 2. 자사 데이터 수집 및 통합
-    blog_df = fetch_naver_search_results(search_query, 'blog', client_id, client_secret, max_results)
-    news_df = fetch_naver_search_results(search_query, 'news', client_id, client_secret, max_results)
-    total_df = pd.concat([blog_df, news_df], ignore_index=True)
-    
-    # 3. 검색량 추이 분석 (월간)
-    trend_df = get_search_trend(search_query, client_id, client_secret)
-    
-    # 4. 경쟁사 데이터 수집
-    competitor_df = pd.DataFrame()
-    if is_comp_valid and competitor_query:
-        comp_blog_df = fetch_naver_search_results(competitor_query, 'blog', client_id, client_secret, max_results)
-        comp_news_df = fetch_naver_search_results(competitor_query, 'news', client_id, client_secret, max_results)
-        competitor_df = pd.concat([comp_blog_df, comp_news_df], ignore_index=True)
+    # 1. 데이터 수집
+    blog = fetch_naver_search_results(search_query, 'blog', client_id, client_secret, max_results)
+    news = fetch_naver_search_results(search_query, 'news', client_id, client_secret, max_results)
+    total = pd.concat([blog, news], ignore_index=True)
+    trend = get_search_trend(search_query, client_id, client_secret)
 
-    if total_df.empty:
-        analysis_results["message"] = "수집된 자사 블로그/뉴스 데이터가 없어 분석을 건너뜁니다."
-        analysis_results["status"] = "INSUFFICIENT_DATA"
-        return analysis_results
+    if total.empty:
+        results["status"] = "INSUFFICIENT_DATA"
+        return results
 
-    # 5. 분석 및 지표 계산
-    total_description = ' '.join(total_df['description'].astype(str).tolist())
-    positive_score = calculate_lexicon_score(total_description) 
-    final_sentiment = classify_sentiment(positive_score)
-    most_frequent_date_result, mention_change_rate_result = calculate_key_metrics(total_df)
-    initial_outbreak_months = find_outbreak_weeks(trend_df, change_threshold=0.5) 
-    
-    # 6. 시각화 및 URL 저장
-    gc.collect() 
-    
+    comp_df = pd.DataFrame()
+    if competitor_query:
+        cb = fetch_naver_search_results(competitor_query, 'blog', client_id, client_secret, max_results)
+        cn = fetch_naver_search_results(competitor_query, 'news', client_id, client_secret, max_results)
+        comp_df = pd.concat([cb, cn], ignore_index=True)
+
+    # 2. 지표 계산
+    desc = ' '.join(total['description'].astype(str).tolist())
+    score = calculate_lexicon_score(desc)
+    sent_label = classify_sentiment(score)
+    freq_date, change_rate = calculate_key_metrics(total)
+    outbreak = find_outbreak_weeks(trend)
+
+    # 3. 시각화 생성 (⚠️ 고유 ID 사용)
+    unique_id = str(uuid.uuid4())[:8]
     urls = {}
     
-    # 6-1. 감성 워드클라우드
-    pos_plot, neg_plot, all_plot, top7_keywords_df = visualize_sentiment_word_clouds(
-        total_df, POSITIVE_WORDS, NEGATIVE_WORDS
-    )
+    pos_p, neg_p, all_p, top_k = visualize_sentiment_word_clouds(total, POSITIVE_WORDS, NEGATIVE_WORDS)
+    urls["positive_wordcloud"] = save_and_get_url(lambda: pos_p, "sentiment_pos_wc.png", static_folder, unique_id)
+    urls["negative_wordcloud"] = save_and_get_url(lambda: neg_p, "sentiment_neg_wc.png", static_folder, unique_id)
+    urls["combined_wordcloud"] = save_and_get_url(lambda: all_p, "sentiment_wc.png", static_folder, unique_id)
     
-    urls["positive_wordcloud"] = save_and_get_url(
-        lambda: pos_plot, "sentiment_positive_wc.png", static_folder
-    )
-    urls["negative_wordcloud"] = save_and_get_url(
-        lambda: neg_plot, "sentiment_negative_wc.png", static_folder
-    )
-    urls["combined_wordcloud"] = save_and_get_url(
-        lambda: all_plot, "sentiment_combined_wc.png", static_folder
-    )
-    
-    # 6-2. 월별 언급량 추이
-    urls["monthly_frequency"] = save_and_get_url(
-        lambda: visualize_post_frequency(total_df, frequency_type='monthly'),
-        "mention_monthly_freq.png", static_folder
-    )
-    
-    # 6-3. 주별 언급량 추이 (최근 6개월)
-    urls["weekly_frequency"] = save_and_get_url(
-        lambda: visualize_post_frequency(total_df, frequency_type='weekly'),
-        "mention_weekly_freq.png", static_folder
-    )
-    
-    # 6-4. 검색량 vs 언급량 통합
-    urls["combined_trend"] = save_and_get_url(
-        lambda: visualize_combined_trend(total_df, trend_df),
-        "mention_vs_search_trend.png", static_folder
-    )
-    
-    # 6-5. 경쟁사 비교 (경쟁사 데이터가 있을 때만)
-    if is_comp_valid and not competitor_df.empty:
+    urls["monthly_frequency"] = save_and_get_url(lambda: visualize_post_frequency(total, 'monthly'), "freq_month.png", static_folder, unique_id)
+    urls["weekly_frequency"] = save_and_get_url(lambda: visualize_post_frequency(total, 'weekly'), "freq_week.png", static_folder, unique_id)
+    urls["combined_trend"] = save_and_get_url(lambda: visualize_combined_trend(total, trend), "trend_cross.png", static_folder, unique_id)
+
+    if not comp_df.empty:
         urls["competitor_comparison"] = save_and_get_url(
-            lambda: visualize_competitor_mention_comparison(search_query, total_df, competitor_query, competitor_df),
-            "competitor_comparison.png", static_folder
+            lambda: visualize_competitor_mention_comparison(search_query, total, competitor_query, comp_df),
+            "comp_compare.png", static_folder, unique_id
         )
-    else:
-        urls["competitor_comparison"] = None
-    
-    # 7. 최종 결과 딕셔너리 구성
-    analysis_results = {}
 
-    # 기본 정보
-    analysis_results["query"] = search_query
-    analysis_results["competitor_query"] = competitor_query
-    analysis_results["status"] = "SUCCESS"
-    analysis_results["message"] = f"'{search_query}' 분석이 완료되었습니다."
+    # 4. 결과 반환
+    results.update({
+        "status": "SUCCESS", "message": "완료",
+        "total_mentions": len(total),
+        "most_frequent_date": freq_date,
+        "mention_change_rate": change_rate,
+        "positive_percentage": int(score),
+        "final_sentiment_label": sent_label,
+        "top_keywords": top_k.to_dict('records'),
+        "visualization_urls": urls,
+        "post_list": total[['title', 'postdate', 'channel_name', 'link']].rename(columns={'postdate': 'date', 'channel_name': 'author'}).to_dict('records'),
+        "outbreak_weeks": outbreak
+    })
 
-    # 핵심 지표
-    analysis_results["total_mentions"] = len(total_df)
-    analysis_results["most_frequent_date"] = most_frequent_date_result
-    analysis_results["mention_change_rate"] = mention_change_rate_result
-    analysis_results["competitor_mentions"] = len(competitor_df) if competitor_query else 0
-
-    # 감성 분석
-    analysis_results["final_sentiment_label"] = final_sentiment 
-    analysis_results["positive_percentage"] = int(float(f"{positive_score:.2f}")) 
-    analysis_results["top_keywords"] = top7_keywords_df.to_dict('records') if not top7_keywords_df.empty else []
-
-    # 트렌드 분석
-    analysis_results["outbreak_weeks"] = initial_outbreak_months
-    analysis_results["trend_data_available"] = not trend_df.empty
-
-    # 시각화 URL
-    analysis_results["visualization_urls"] = urls
-
-    # 게시물 리스트
-    analysis_results["post_list"] = total_df[[
-        'title', 
-        'postdate', 
-        'channel_name', 
-        'link'
-    ]].rename(columns={
-        'postdate': 'date', 
-        'channel_name': 'author'
-    }).to_dict('records')
-
-    # ⚠️ [설정] 여기에 Gemini API 키를 직접 입력하세요 (따옴표 안에)
-    MY_GEMINI_KEY = "oo"
-
-    # AI 리포트 생성 호출
-    analysis_results["ai_report"] = generate_smart_report(
-        query=search_query,
-        total_mentions=len(total_df),
-        sentiment_label=final_sentiment,
-        positive_score=int(float(f"{positive_score:.2f}")),
-        top_keywords=top7_keywords_df.to_dict('records') if not top7_keywords_df.empty else [],
-        outbreak_weeks=initial_outbreak_months,
-        trend_available=not trend_df.empty,
-        most_frequent_date=most_frequent_date_result,
-        mention_change_rate=mention_change_rate_result,
-        
-        api_key=MY_GEMINI_KEY
+    results["ai_report"] = generate_smart_report(
+        search_query, len(total), sent_label, int(score), results["top_keywords"], 
+        outbreak, not trend.empty, freq_date, change_rate, 
+        os.getenv("GEMINI_API_KEY")
     )
-
-    print("\n==================================================")
-    print("✅ 최종 분석 결과 JSON 생성 완료. Flask 응답 준비.")
-    print("==================================================")
-
-    return analysis_results
-
-# ----------------------------------------------------
-# --- 콘솔 테스트용 실행 블록 ---
-# ----------------------------------------------------
+    
+    return results
 
 if __name__ == "__main__":
-    print("이 코드는 Flask 앱의 백엔드 모듈로 설계되었습니다.")
-    print("실제 테스트를 위해서는 Flask 환경과 API 키, 폰트 경로 등이 필요합니다.")
+    print("Flask 백엔드 모듈입니다.")

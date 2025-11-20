@@ -94,7 +94,7 @@ MY_GEMINI_KEY = "YOUR_GEMINI_API_KEY"
 ### 5\. 애플리케이션 실행
 
 ```bash
-python app.py
+python application.py
 # 또는 Flask 실행 파일명 (예: main.py)
 ```
 
@@ -111,7 +111,7 @@ Brand_Scope/
 ├── templates/
 │   └── index.html     # 메인 대시보드 HTML
 ├── analysis_core.py   # 데이터 수집, 분석, 시각화 핵심 로직
-├── app.py             # Flask 메인 애플리케이션 (예상)
+├── application.py             # Flask 메인 애플리케이션 (예상)
 └── README.md          # 프로젝트 설명
 ```
 

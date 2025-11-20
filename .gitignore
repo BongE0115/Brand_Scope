@@ -26,3 +26,8 @@ ENV/
 
 # Logs
 *.log
+
+
+*.pyc
+.DS_Store
+static/img/*.png

@@ -63,7 +63,7 @@ body {
 /* 검색 폼 컨테이너 */
 .search-form {
   position: relative;
-  width: 600px;
+  width: 500px;
 }
 
 /* 검색 입력창 스타일 */
@@ -217,7 +217,7 @@ body {
   color: #555;
 }
 .littletitle b {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: #111;
 }
 
@@ -462,7 +462,7 @@ body {
 .keyword-ranking h2 {
   margin: 0;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 17px;
   text-align: center;
 }
 
@@ -545,67 +545,118 @@ body {
 
 
 
-/* 관련 게시물 리스트 (기존 스타일 유지) */
+/* --- 게시물 리스트 컨테이너 --- */
+#sns-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;          /* 카드 사이 간격 넓힘 */
+  padding: 5px 2px;   /* 내부 여백 */
+  max-height: 500px;  
+  overflow-y: auto;   
+}
+
+/* 스크롤바 숨기기 (기존 유지) */
 .card-side-second::-webkit-scrollbar {
   display: none;
 }
-/* SNS div들에 각각 다른 색상과 스타일 적용 */
-.sns1,
-.sns2 {
-  height: 50px;
+
+/* --- 게시물 카드 디자인 (공통) --- */
+.sns1, .sns2 {
+  /* 고정 높이 제거 -> 내용에 따라 유연하게 늘어나도록 */
+  height: auto;       
+  min-height: 80px;   /* 최소 높이 설정 */
   width: 100%;
-  border-radius: 15px;
-  display: flex;
-  justify-content: space-between;
-  color: #3f3f3fff;
-  font-weight: bold;
-  flex: 0 0 auto;
-  margin-bottom: 10px;
-  padding: 0 10px;
-  box-sizing: border-box;
-  align-items: center;
-}
-
-.more {
-  height: 30px;
-  width: 100%;
-  border-radius: 15px; /* 모서리를 둥글게 */
-  background-color: #c9c9c9ff;
-  display: flex;
-  justify-content: center; /* 가로(수평) 중앙 정렬 */
-  align-items: center; /* 세로(수직) 중앙 정렬 */
-  color: #3f3f3fff;
-  font-weight: bold; /* 글자를 굵게 만듭니다 */
-}
-
-.sns1 {
-  background-color: #e5f1ff; /* 첫 번째 div 색상 */
-}
-
-.sns2 {
-  background-color: #e0fdde; /* 두 번째 div 색상 */
-}
-
-
-
-/* (선택 사항) h2 요소와 첫 번째 SNS div 사이의 간격 */
-.card-side-second h2 {
-  margin-bottom: 5px;
-  display: flex; /* Flexbox 활성화 */
-  align-items: baseline; /* 텍스트 기준선에 맞춰 정렬 */
-  gap: 5px; /* h2 텍스트와 p 태그 사이 간격 추가 */
-  font-weight: bold; /* 글자를 굵게 만듭니다 */
-}
-
-.sns-icon {
-  width: 24px; /* 아이콘의 너비 */
-  height: 24px; /* 아이콘의 높이 */
-  margin-right: 8px; /* 아이콘과 텍스트 사이의 간격 */
-}
   
+  /* 디자인 디테일 강화 */
+  border-radius: 12px;
+  padding: 15px;
+  box-sizing: border-box;
+  
+  /* 배치 설정 */
+  display: flex;
+  flex-direction: column; /* 내용물을 위아래로 배치 */
+  justify-content: center;
+  gap: 8px;               /* 제목과 하단 정보 사이 간격 */
+  
+  /* 그림자 및 트랜지션 추가 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  /* 폰트 기본 설정 */
+  color: #333;
+  margin-bottom: 0; /* 컨테이너 gap으로 대체하므로 제거 */
+}
+
+/* 호버 효과 (마우스 올렸을 때) */
+.sns1:hover, .sns2:hover {
+  transform: translateY(-2px); /* 살짝 떠오름 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 그림자 진해짐 */
+}
+
+/* 배경색 (파스텔톤 유지하되 조금 더 연하게) */
+.sns1 {
+  background-color: #f0f7ff; /* 아주 연한 파랑 */
+  border: 1px solid #e1ecf9; /* 테두리 추가 */
+}
+
+.sns2 {
+  background-color: #f1fdf0; /* 아주 연한 초록 */
+  border: 1px solid #e3f5e1; /* 테두리 추가 */
+}
+
+/* --- 상단: 아이콘 + 제목 영역 --- */
 .title-wrapper {
-  display:flex;
-  padding: 3px;
+  display: flex;
+  align-items: center; /* 아이콘과 텍스트 수직 중앙 정렬 */
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+/* SNS 아이콘 스타일 */
+.sns-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  object-fit: contain;
+  flex-shrink: 0; /* 아이콘 찌그러짐 방지 */
+}
+
+/* 제목 링크 텍스트 */
+.title-wrapper a {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-decoration: none;
+  
+  /* 말줄임표 처리 (한 줄 넘어가면 ...) */
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* 제목은 1줄까지만 표시 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+/* --- 하단: 작성자 + 날짜 영역 --- */
+.meta-wrapper {
+  display: flex;
+  justify-content: space-between; /* 양끝 정렬 */
+  align-items: center;
+  width: 100%;
+  font-size: 12px;
+  color: #888;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.05); /* 구분선 추가 */
+}
+
+.meta-wrapper span:first-child {
+  font-weight: 500;
+  color: #555; /* 작성자는 조금 더 진하게 */
+  
+  /* 작성자 이름 길면 ... 처리 */
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 3. 마크다운 변환 태그 스타일링 (특수문자 대신 적용될 디자인) */
@@ -696,4 +747,66 @@ body {
     
     /* out-name div 자체를 중앙에 배치하기 위해 필요한 경우: */
     justify-content: center;
+}
+
+/* =========================================
+   🔄 로딩 스피너 및 오버레이 스타일
+   ========================================= */
+
+/* 1. 공통 스피너 애니메이션 */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 4px solid #f3f3f3; /* 회색 배경 */
+    border-top: 4px solid #3498db; /* 파란색 포인트 */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    margin-top: 15px;
+    font-weight: bold;
+    color: #555;
+    font-size: 16px;
+}
+
+/* 2. 전체 화면 로딩 (메인 검색용) */
+#global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9); /* 반투명 흰색 배경 */
+    z-index: 9999; /* 가장 위에 뜨도록 */
+    display: none; /* 평소에는 숨김 */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 3. 부분 로딩 (경쟁사 분석 카드용) */
+#competitor-loader {
+    position: absolute; /* 부모 기준 절대 위치 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: 100;
+    border-radius: 15px; /* 카드 모서리에 맞춤 */
+    display: none; /* 평소에는 숨김 */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 부분 로딩이 카드 안에 갇히려면 부모에게 relative가 필요함 */
+.card-graph4 {
+    position: relative !important; 
 }
